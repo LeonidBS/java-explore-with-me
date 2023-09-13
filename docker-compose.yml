@@ -1,15 +1,79 @@
-version: '3.1'
+version: '3.8'
 services:
+
+  stats-client:
+    build:
+      context: ./stats-service/stats-client
+      dockerfile: Dockerfile
+    image: stats-client:latest
+    container_name: stats-client
+    ports:
+      - "8081:8081"
+    environment:
+      - STATS_SERVER_URL=http://stats-server:9090
+
   stats-server:
+    build:
+      context: ./stats-service/stats-server
+      dockerfile: Dockerfile
+    image: stats-server:latest
+    container_name: stats-server
     ports:
       - "9090:9090"
+    depends_on:
+      stats-db:
+        condition: service_healthy
+    environment:
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://stats-db:5432/root
 
   stats-db:
-    image: postgres:14-alpine
+    image: postgres:15.3-alpine
+    container_name: stats-db
+    volumes:
+      - /var/lib/postgresql/data/
+    ports:
+      - "6541:5432"
+    environment:
+      - POSTGRES_DB=root
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+    healthcheck:
+      test: ["CMD", "pg_isready"]
+      interval: 1s
+      timeout: 5s
+      retries: 10
 
   ewm-service:
+    build:
+      context: ewm-service
+      dockerfile: Dockerfile
+    image: ewm-server:latest
+    container_name: ewm-service
     ports:
       - "8080:8080"
+    depends_on:
+      ewm-db:
+        condition: service_healthy
+    environment:
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://ewm-db:5432/db
 
   ewm-db:
-    image: postgres:14-alpine
+    image: postgres:15.3-alpine
+    container_name: ewm-db
+    volumes:
+      - /var/lib/postgresql/data/
+    ports:
+      - "6542:5432"
+    environment:
+      - POSTGRES_DB=db
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+    healthcheck:
+      test: ["CMD", "pg_isready"]
+      interval: 1s
+      timeout: 5s
+      retries: 10
