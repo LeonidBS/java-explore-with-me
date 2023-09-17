@@ -8,7 +8,7 @@ services:
     image: stats-client:latest
     container_name: stats-client
     ports:
-      - "8081:8081"
+      - "8082:8082"
     environment:
       - STATS_SERVER_URL=http://stats-server:9090
 
