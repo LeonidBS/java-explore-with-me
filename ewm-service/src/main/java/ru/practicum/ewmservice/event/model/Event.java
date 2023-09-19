@@ -31,9 +31,6 @@ public class Event {
     @ToString.Exclude
     private Category category;
 
-    @Column(name = "confirmed_requests")
-    private Integer confirmedRequests;
-
     @Column
     @JsonFormat(pattern = DATE_PATTERN)
     private LocalDateTime createdOn;

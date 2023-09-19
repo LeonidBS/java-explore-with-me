@@ -1,51 +1,47 @@
 package ru.practicum.ewmservice.event.dto;
 
+
+import com.sun.istack.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ru.practicum.ewmservice.category.dto.CategoryDto;
 import ru.practicum.ewmservice.event.model.Location;
-import ru.practicum.ewmservice.event.model.State;
-import ru.practicum.ewmservice.user.dto.UserShortDto;
+import ru.practicum.ewmservice.validation.FutureInDuration;
 
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.PositiveOrZero;
 import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class EventFullDto {
+public class NewEventDto {
 
-    private Integer id;
-
+    @NotBlank
     String annotation;
 
-    private CategoryDto category;
+    @PositiveOrZero
+    private Integer category;
 
-    private Integer confirmedRequests;
-
-    private LocalDateTime createdOn;
-
+    @NotBlank
     private String description;
 
+    @FutureInDuration(duration = "P2H")
+    @NotNull
     private LocalDateTime eventDate;
 
-    private UserShortDto initiator;
-
+    @NotNull
     private Location location;
 
     private Boolean paid;
 
+    @PositiveOrZero
     private Integer participantLimit;
-
-    private LocalDateTime publishedOn;
 
     private Boolean requestModeration;
 
-    private State state;
-
+    @NotBlank
     private String title;
-
-    private int views;
 }

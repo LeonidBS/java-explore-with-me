@@ -7,7 +7,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.statsclient.client.StatsClient;
+import ru.practicum.statsclient.client.StatsClientImpl;
 import ru.practicum.statsdto.EndpointHitDto;
 
 import javax.validation.Valid;
@@ -20,7 +20,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Validated
 public class StatsController {
-    private final StatsClient statsClient;
+   private final StatsClientImpl statsClient;
 
     @GetMapping("/stats")
     public ResponseEntity<Object> findStats(@DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")

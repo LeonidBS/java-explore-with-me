@@ -5,9 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.ewmservice.event.adm.repository.EventAdmRepository;
+import ru.practicum.ewmservice.event.repository.EventRepository;
 import ru.practicum.ewmservice.exception.IdNotFoundException;
-import ru.practicum.ewmservice.user.adm.repository.UserAdmRepository;
+import ru.practicum.ewmservice.user.repository.UserRepository;
 import ru.practicum.ewmservice.user.dto.UserDto;
 import ru.practicum.ewmservice.user.dto.UserMapper;
 import ru.practicum.ewmservice.user.model.User;
@@ -19,8 +19,8 @@ import java.util.List;
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class UserAdmService implements UserAdmServiceImpl {
-    private final UserAdmRepository userRepository;
-    private final EventAdmRepository eventAdmRepository;
+    private final UserRepository userRepository;
+    private final EventRepository eventRepository;
 
 
     @Override
@@ -47,13 +47,14 @@ public class UserAdmService implements UserAdmServiceImpl {
     @Override
     @Transactional
     public void deleteById(Integer id) {
+        PageRequest page = PageRequest.of(0, 10);
 
         if (userRepository.findById(id).isEmpty()) {
             log.error("User with ID {}} has not been found", id);
             throw new IdNotFoundException(String.format("User with ID %d has not been found", id));
         }
 
-        if (!eventAdmRepository.findByInitiatorId(id).isEmpty()) {
+        if (!eventRepository.findByInitiatorId(id, page).isEmpty()) {
             log.error("User with ID {}} has not been found", id);
             throw new IdNotFoundException(String.format("User with ID %d has not been found", id));
         }

@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import ru.practicum.ewmservice.category.model.Category;
 import ru.practicum.ewmservice.event.model.Location;
 import ru.practicum.ewmservice.event.model.StateAction;
+import ru.practicum.ewmservice.validation.FutureInDuration;
 
 import java.time.LocalDateTime;
 
@@ -18,10 +19,11 @@ public class UpdateEventUserRequest {
 
     String annotation;
 
-    private Category category;
+    private Integer category;
 
     private String description;
 
+    @FutureInDuration(duration = "P2H")
     private LocalDateTime eventDate;
 
     private Location location;

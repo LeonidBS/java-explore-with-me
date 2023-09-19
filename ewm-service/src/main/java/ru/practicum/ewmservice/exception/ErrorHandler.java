@@ -62,7 +62,7 @@ public class ErrorHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.CONFLICT)
-    public ApiError handHibernateException(final EventValidationException e) {
+    public ApiError handRequestErrorException(final EventValidationException e) {
         return ApiError.builder()
                 .errors(null)
                 .message(e.getMessage())
@@ -72,6 +72,17 @@ public class ErrorHandler {
                 .build();
     }
 
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ApiError handRequestErrorException(final ParticipationRequestException e) {
+        return ApiError.builder()
+                .errors(null)
+                .message(e.getMessage())
+                .reason("For the requested operation the conditions are not met.")
+                .status(HttpStatus.CONFLICT)
+                .timestamp(LocalDateTime.now())
+                .build();
+    }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)

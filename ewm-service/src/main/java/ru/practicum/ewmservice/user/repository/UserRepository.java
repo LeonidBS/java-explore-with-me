@@ -1,4 +1,4 @@
-package ru.practicum.ewmservice.user.adm.repository;
+package ru.practicum.ewmservice.user.repository;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -12,7 +12,7 @@ import java.util.List;
 
 
 @Repository
-public interface UserAdmRepository extends JpaRepository<User, Integer> {
+public interface UserRepository extends JpaRepository<User, Integer> {
 
     Page<User> findByIdIn(List<Integer> ids, Pageable page);
 

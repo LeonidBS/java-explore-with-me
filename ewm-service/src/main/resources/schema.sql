@@ -63,3 +63,29 @@ CREATE TABLE IF NOT EXISTS compilations
     pinned BOOLEAN,
     title VARCHAR
 );
+
+CREATE TABLE IF NOT EXISTS event_compilation
+(
+    event_id       INT,
+    CONSTRAINT fk_event_compilation_to_event
+        FOREIGN KEY (event_id) REFERENCES events (id),
+    compilation_id INT,
+    CONSTRAINT fk_event_compilation_to_compilation_
+        FOREIGN KEY (compilation_id) REFERENCES compilations (id),
+    PRIMARY KEY (event_id, compilation_id)
+);
+
+CREATE TABLE IF NOT EXISTS participation
+(
+    id          INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    created     TIMESTAMP WITHOUT TIME ZONE,
+    description VARCHAR,
+    eventDate   TIMESTAMP WITHOUT TIME ZONE,
+    event_id    INT,
+    CONSTRAINT fk_participation_to_event
+        FOREIGN KEY (event_id) REFERENCES events (id),
+    user_id     INT,
+    CONSTRAINT fk_events_to_users
+        FOREIGN KEY (user_id) REFERENCES users (id),
+    status      VARCHAR(16) NOT NULL
+);

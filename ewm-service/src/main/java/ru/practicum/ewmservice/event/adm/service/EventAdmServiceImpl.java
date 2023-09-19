@@ -5,9 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.ewmservice.event.adm.repository.EventAdmRepository;
+import ru.practicum.ewmservice.event.repository.EventRepository;
 import ru.practicum.ewmservice.event.dto.EventFullDto;
-import ru.practicum.ewmservice.event.dto.EventMapperFullDto;
+import ru.practicum.ewmservice.event.dto.EventMapper;
 import ru.practicum.ewmservice.event.dto.UpdateEventAdminRequest;
 import ru.practicum.ewmservice.event.model.Event;
 import ru.practicum.ewmservice.event.model.State;
@@ -24,8 +24,8 @@ import java.util.List;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class EventAdmServiceImpl implements EventAdmService {
-    private final EventAdmRepository eventAdmRepository;
-    private final EventMapperFullDto eventMapperFullDto;
+    private final EventRepository eventRepository;
+    private final EventMapper eventMapper;
 
 
     @Override
@@ -34,16 +34,15 @@ public class EventAdmServiceImpl implements EventAdmService {
                                                 LocalDateTime rangeEnd, Integer from, Integer size) {
         PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size);
 
-        return eventMapperFullDto.mapListToDto(eventAdmRepository
+        return eventMapper.mapListToDto(eventRepository
                 .findByInitiatorIdInAndStateInAndCategoryIdInAndEventDateBetweenOrderByEventDate(
                         users, states, categories, rangeStart, rangeEnd, page));
-
     }
 
     @Override
     public EventFullDto update(UpdateEventAdminRequest updateEventAdminRequest, Integer eventId) {
 
-        Event existedEvent = eventAdmRepository.findById(eventId)
+        Event existedEvent = eventRepository.findById(eventId)
                 .orElseThrow(() -> {
                     log.error("Event with ID {} has not been found", eventId);
                     return new IdNotFoundException("There is no Event with ID: " + eventId);
@@ -81,6 +80,6 @@ public class EventAdmServiceImpl implements EventAdmService {
                 .build();
 
         log.debug("Event has been updated: {}", event);
-        return eventMapperFullDto.mapToDto(eventAdmRepository.save(event));
+        return eventMapper.mapToDto(eventRepository.save(event));
     }
 }
