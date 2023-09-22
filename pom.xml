@@ -15,6 +15,9 @@
     <modules>
         <module>stats-service</module>
         <module>ewm-service</module>
+        <module>stats-service/stats-server</module>
+        <module>stats-service/stats-client</module>
+        <module>stats-service/stats-dto</module>
     </modules>
 
     <groupId>ru.practicum</groupId>
@@ -24,22 +27,19 @@
 
     <properties>
         <java.version>11</java.version>
+        <org.mapstruct.version>1.5.5.Final</org.mapstruct.version>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <spring.version>4.3.5.RELEASE</spring.version>
     </properties>
 
     <dependencies>
-        <dependency>
-            <groupId>ru.practicum</groupId>
-            <artifactId>stats-client</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-            <scope>compile</scope>
-        </dependency>
 
     <dependency>
         <groupId>org.postgresql</groupId>
         <artifactId>postgresql</artifactId>
-        <version>42.3.8</version>
+        <version>42.3.7</version>
         <scope>runtime</scope>
     </dependency>
 
@@ -62,7 +62,7 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <version>5.3.1</version>
+            <version>4.5.1</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -74,7 +74,7 @@
         <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-jsr310</artifactId>
-            <version>2.14.2</version>
+            <version>2.13.4</version>
         </dependency>
     </dependencies>
 

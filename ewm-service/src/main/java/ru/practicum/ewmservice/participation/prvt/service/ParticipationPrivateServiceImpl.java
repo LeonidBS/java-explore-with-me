@@ -7,15 +7,15 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewmservice.event.model.Event;
 import ru.practicum.ewmservice.event.model.State;
 import ru.practicum.ewmservice.event.repository.EventRepository;
+import ru.practicum.ewmservice.participation.repository.ParticipationRepository;
+import ru.practicum.ewmservice.user.model.User;
+import ru.practicum.ewmservice.user.repository.UserRepository;
 import ru.practicum.ewmservice.exception.IdNotFoundException;
 import ru.practicum.ewmservice.exception.ParticipationRequestException;
 import ru.practicum.ewmservice.participation.dto.ParticipationDto;
 import ru.practicum.ewmservice.participation.dto.ParticipationMapper;
 import ru.practicum.ewmservice.participation.model.Participation;
 import ru.practicum.ewmservice.participation.model.ParticipationRequestStatus;
-import ru.practicum.ewmservice.participation.repository.ParticipationRepository;
-import ru.practicum.ewmservice.user.model.User;
-import ru.practicum.ewmservice.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;

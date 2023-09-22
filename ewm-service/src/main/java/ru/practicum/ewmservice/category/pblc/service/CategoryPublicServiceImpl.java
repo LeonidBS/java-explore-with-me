@@ -5,10 +5,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.ewmservice.category.dto.CategoryDto;
-import ru.practicum.ewmservice.category.dto.CategoryMapper;
 import ru.practicum.ewmservice.category.model.Category;
 import ru.practicum.ewmservice.category.repository.CategoryRepository;
+import ru.practicum.ewmservice.category.dto.CategoryDto;
+import ru.practicum.ewmservice.category.dto.CategoryMapper;
 import ru.practicum.ewmservice.exception.IdNotFoundException;
 
 import java.util.List;
