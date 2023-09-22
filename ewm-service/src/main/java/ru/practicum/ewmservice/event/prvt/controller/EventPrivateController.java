@@ -2,6 +2,7 @@ package ru.practicum.ewmservice.event.prvt.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewmservice.event.dto.*;
@@ -9,56 +10,63 @@ import ru.practicum.ewmservice.event.prvt.service.EventPrivateService;
 import ru.practicum.ewmservice.participation.dto.ParticipationDto;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping(path = "/users/{userId}/events")
+@RequestMapping(path = "/users")
 @RequiredArgsConstructor
 @Validated
 public class EventPrivateController {
     private final EventPrivateService eventPrivateService;
 
-    @GetMapping
+    @GetMapping("/{userId}/events")
     public List<EventShortDto> getByInitiatorId(@PositiveOrZero @PathVariable Integer userId,
-                                                @RequestParam(defaultValue = "0") @PositiveOrZero Integer from,
-                                                @RequestParam(defaultValue = "10") @PositiveOrZero Integer size) {
+                                                @PositiveOrZero(message
+                                                        = "page should be positive or 0")
+                                                @RequestParam(defaultValue = "0") Integer from,
+                                                @Positive(message
+                                                        = "size should be positive number")
+                                                @RequestParam(defaultValue = "10") Integer size) {
 
         return eventPrivateService.findByInitiatorId(userId, from, size);
     }
 
-    @PostMapping
-    public EventFullDto create(@RequestBody @Valid NewEventDto newEventDto,
+    @PostMapping("/{userId}/events")
+    @ResponseStatus(HttpStatus.CREATED)
+    public EventFullDto create(@Valid @RequestBody NewEventDto newEventDto,
                                @PositiveOrZero @PathVariable Integer userId) {
 
         return eventPrivateService.create(newEventDto, userId);
     }
 
-    @GetMapping("/{eventId}")
+    @GetMapping("/{userId}/events/{eventId}")
     public EventFullDto getByIdAndInitiatorId(@PositiveOrZero @PathVariable Integer userId,
                                               @PositiveOrZero @PathVariable Integer eventId) {
 
         return eventPrivateService.findByIdAndInitiatorId(userId, eventId);
     }
 
-    @PatchMapping("/{eventId}")
-    public EventFullDto updateEvent(@RequestBody @Valid UpdateEventUserRequest updateEventUserRequest,
-                                    @PositiveOrZero @PathVariable Integer userId,
-                                    @PositiveOrZero @PathVariable Integer eventId) {
+    @PatchMapping("/{userId}/events/{eventId}")
+    public EventFullDto patchEvent(@PositiveOrZero @PathVariable Integer userId,
+                                   @PositiveOrZero @PathVariable Integer eventId,
+                                   @Valid @RequestBody UpdateEventUserRequest updateEventUserRequest) {
 
-        return eventPrivateService.update(updateEventUserRequest, userId, eventId);
+        return eventPrivateService.updateEvent(updateEventUserRequest, userId, eventId);
     }
 
-    @GetMapping("/{eventId}/requests")
+    @GetMapping("/{userId}/events/{eventId}/requests")
     public List<ParticipationDto> getByEventIdAndEventInitiatorId(@PositiveOrZero @PathVariable Integer userId,
                                                                   @PositiveOrZero @PathVariable Integer eventId) {
 
         return eventPrivateService.findByEventIdAndEventInitiatorId(userId, eventId);
     }
 
-    @PatchMapping("/{eventId}/requests")
-    public EventRequestStatusUpdateResult updateParticipation(@RequestBody @Valid EventRequestStatusUpdateRequest eventRequestStatusUpdateRequest,
+    @PatchMapping("/{userId}/events/{eventId}/requests")
+    public EventRequestStatusUpdateResult updateParticipation(@RequestBody @Valid EventRequestStatusUpdateRequest
+                                                                      eventRequestStatusUpdateRequest,
                                                               @PositiveOrZero @PathVariable Integer userId,
                                                               @PositiveOrZero @PathVariable Integer eventId) {
 

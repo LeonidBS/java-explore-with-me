@@ -1,5 +1,6 @@
 package ru.practicum.ewmservice.participation.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 import ru.practicum.ewmservice.participation.model.ParticipationRequestStatus;
 
@@ -17,6 +18,7 @@ public class ParticipationDto {
     private Integer id;
 
     @FutureOrPresent
+    @JsonFormat(pattern = "yyyy-MM-dd' 'HH:mm:ss")
     private LocalDateTime created;
 
     @PositiveOrZero

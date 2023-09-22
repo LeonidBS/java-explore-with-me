@@ -12,7 +12,7 @@ public interface EventPrivateService {
 
     EventFullDto findByIdAndInitiatorId(Integer userId, Integer eventId);
 
-    EventFullDto update(UpdateEventUserRequest updateEventUserRequest, Integer userId, Integer eventId);
+    EventFullDto updateEvent(UpdateEventUserRequest updateEventUserRequest, Integer userId, Integer eventId);
 
     List<ParticipationDto> findByEventIdAndEventInitiatorId(Integer userId, Integer eventId);
 

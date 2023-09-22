@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import ru.practicum.ewmservice.participation.model.ParticipationRequestStatus;
 
 import java.util.List;
 
@@ -14,5 +15,6 @@ import java.util.List;
 public class EventRequestStatusUpdateRequest {
 
     private List<Integer> requestIds;
-    private String status;
+
+    private ParticipationRequestStatus status;
 }

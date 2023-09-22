@@ -9,8 +9,11 @@ import ru.practicum.ewmservice.category.model.Category;
 import ru.practicum.ewmservice.category.repository.CategoryRepository;
 import ru.practicum.ewmservice.event.dto.*;
 import ru.practicum.ewmservice.event.model.Event;
+import ru.practicum.ewmservice.event.model.Location;
 import ru.practicum.ewmservice.event.model.State;
+import ru.practicum.ewmservice.event.model.StateAction;
 import ru.practicum.ewmservice.event.repository.EventRepository;
+import ru.practicum.ewmservice.event.repository.LocationRepository;
 import ru.practicum.ewmservice.exception.AccessDeniedException;
 import ru.practicum.ewmservice.exception.IdNotFoundException;
 import ru.practicum.ewmservice.exception.MyValidationException;
@@ -22,6 +25,7 @@ import ru.practicum.ewmservice.participation.repository.ParticipationRepository;
 import ru.practicum.ewmservice.user.model.User;
 import ru.practicum.ewmservice.user.repository.UserRepository;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +33,7 @@ import java.util.List;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
+@Transactional
 public class EventPrivateServiceImpl implements EventPrivateService {
     private final EventRepository eventRepository;
     private final ParticipationRepository participationRepository;
@@ -37,14 +41,24 @@ public class EventPrivateServiceImpl implements EventPrivateService {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final ParticipationMapper participationMapper;
+    private final LocationRepository locationRepository;
 
     @Override
     public List<EventShortDto> findByInitiatorId(Integer userId, Integer from, Integer size) {
         PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size);
-        eventRepository.updateViewByEventIds(eventRepository.findIdByInitiatorId(userId));
+        List<Integer> eventIds = List.copyOf(eventRepository.findIdByInitiatorId(userId));
 
-        return eventMapper.mapListToShortDto(
-                eventRepository.findByInitiatorId(userId, page).toList());
+        if (!eventIds.isEmpty()) {
+            eventRepository.updateViewByEventIds(eventIds);
+        }
+
+        List<Event> events = eventRepository.findByInitiatorIdOrderByEventDateDescIdAsc(userId, page).toList();
+
+        for (Event event : events) {
+            eventRepository.updateViewByEventId(event.getId());
+        }
+
+        return eventMapper.mapListToShortDto(events);
     }
 
     @Override
@@ -62,6 +76,15 @@ public class EventPrivateServiceImpl implements EventPrivateService {
                     return new IdNotFoundException("There is no Category with ID: " + newEventDto.getCategory());
                 });
 
+        Location location = null;
+        if (newEventDto.getLocation() != null) {
+            if (newEventDto.getLocation().getId() == null) {
+                location = locationRepository.save(newEventDto.getLocation());
+            } else {
+                location = newEventDto.getLocation();
+            }
+        }
+
         Event event = Event.builder()
                 .annotation(newEventDto.getAnnotation())
                 .category(category)
@@ -69,12 +92,16 @@ public class EventPrivateServiceImpl implements EventPrivateService {
                 .initiator(user)
                 .description(newEventDto.getDescription())
                 .eventDate(newEventDto.getEventDate())
-                .location(newEventDto.getLocation())
-                .paid(newEventDto.getPaid())
-                .participantLimit(newEventDto.getParticipantLimit())
-                .requestModeration(newEventDto.getRequestModeration())
+                .location(location)
+                .paid(newEventDto.getPaid() != null ?
+                        newEventDto.getPaid() : false)
+                .participantLimit(newEventDto.getParticipantLimit() != null ?
+                        newEventDto.getParticipantLimit() : 0)
+                .requestModeration(newEventDto.getRequestModeration() != null ?
+                        newEventDto.getRequestModeration() : true)
                 .title(newEventDto.getTitle())
-                .state(State.PUBLISHED)
+                .publishedOn(null)
+                .state(State.PENDING)
                 .views(0)
                 .build();
 
@@ -87,19 +114,25 @@ public class EventPrivateServiceImpl implements EventPrivateService {
         Event event = checkEventInitiator(userId, eventId);
 
         eventRepository.updateViewByEventId(eventId);
-        event.setViews(event.getViews() + 1);
 
         return eventMapper.mapToDto(event);
     }
 
     @Override
-    public EventFullDto update(UpdateEventUserRequest updateEventUserRequest, Integer userId, Integer eventId) {
+    @Transactional
+    public EventFullDto updateEvent(UpdateEventUserRequest updateEventUserRequest, Integer userId, Integer eventId) {
 
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> {
                     log.error("Event with ID {} has not been found", eventId);
                     return new IdNotFoundException("There is no Event with ID: " + eventId);
                 });
+
+        if (Duration.between(event.getEventDate(), LocalDateTime.now())
+                .compareTo(Duration.parse("PT2H")) >= 0) {
+            log.error("Event Date must be after for 2 hours");
+            throw new AccessDeniedException("Event Date must be after for 2 hours");
+        }
 
         if (event.getState().equals(State.PUBLISHED)) {
             log.error("Only pending or canceled events can be changed");
@@ -112,21 +145,43 @@ public class EventPrivateServiceImpl implements EventPrivateService {
                     eventId, userId));
         }
 
-        Category category = categoryRepository.findById(updateEventUserRequest.getCategory())
-                .orElseThrow(() -> {
-                    log.error("Category with ID {} has not been found", updateEventUserRequest.getCategory());
-                    return new IdNotFoundException("There is no Category with ID: " + updateEventUserRequest.getCategory());
-                });
+        if (updateEventUserRequest.getCategory() != null) {
+            if (categoryRepository.findById(updateEventUserRequest.getCategory()).isPresent()) {
+                event.setCategory(categoryRepository.findById(updateEventUserRequest.getCategory()).get());
+            }
+        }
 
-        event.setAnnotation(updateEventUserRequest.getAnnotation());
-        event.setCategory(category);
-        event.setDescription(updateEventUserRequest.getDescription());
-        event.setEventDate(updateEventUserRequest.getEventDate());
-        event.setLocation(updateEventUserRequest.getLocation());
-        event.setPaid(updateEventUserRequest.getPaid());
-        event.setParticipantLimit(updateEventUserRequest.getParticipantLimit());
-        event.setRequestModeration(updateEventUserRequest.getRequestModeration());
-        event.setTitle(updateEventUserRequest.getTitle());
+        if (updateEventUserRequest.getAnnotation() != null) event.setAnnotation(
+                updateEventUserRequest.getAnnotation());
+        if (updateEventUserRequest.getDescription() != null) event.setDescription(
+                updateEventUserRequest.getDescription());
+        if (updateEventUserRequest.getEventDate() != null) event.setEventDate(
+                updateEventUserRequest.getEventDate());
+
+        if (updateEventUserRequest.getLocation() != null) {
+            if (updateEventUserRequest.getLocation().getId() == null) {
+                event.setLocation(locationRepository.save(updateEventUserRequest.getLocation()));
+            } else {
+                event.setLocation(updateEventUserRequest.getLocation());
+            }
+        }
+
+        if (updateEventUserRequest.getPaid() != null) event.setPaid(
+                updateEventUserRequest.getPaid());
+        if (updateEventUserRequest.getParticipantLimit() != null) event.setParticipantLimit(
+                updateEventUserRequest.getParticipantLimit());
+        if (updateEventUserRequest.getRequestModeration() != null) event.setRequestModeration(
+                updateEventUserRequest.getRequestModeration());
+        if (updateEventUserRequest.getTitle() != null) event.setTitle(
+                updateEventUserRequest.getTitle());
+
+        if (updateEventUserRequest.getStateAction() != null) {
+            if (updateEventUserRequest.getStateAction().equals(StateAction.SEND_TO_REVIEW)) {
+                event.setState(State.PENDING);
+            } else if (updateEventUserRequest.getStateAction().equals(StateAction.CANCEL_REVIEW)) {
+                event.setState(State.CANCELED);
+            }
+        }
 
         return eventMapper.mapToDto(eventRepository.save(event));
     }
@@ -160,22 +215,23 @@ public class EventPrivateServiceImpl implements EventPrivateService {
         List<ParticipationDto> confirmedRequests = new ArrayList<>();
         List<ParticipationDto> rejectedRequests = new ArrayList<>();
 
-        for (Participation participation : participationRepository
-                .findByIdIn(eventRequestStatusUpdateRequest.getRequestIds())) {
-            if (participationRepository.findParticipationCountByEventId(eventId) >= event.getParticipantLimit()
-                    && participation.getStatus().equals(ParticipationRequestStatus.PENDING)) {
-                if (eventRequestStatusUpdateRequest.getStatus()
-                        .equals(ParticipationRequestStatus.CONFIRMED.toString())) {
-                    confirmedRequests.add(participationMapper.mapToDto(participation));
+            for (Participation participation : participationRepository
+                    .findByIdIn(eventRequestStatusUpdateRequest.getRequestIds())) {
+                if (participation.getStatus().equals(ParticipationRequestStatus.PENDING)) {
+                    if (eventRequestStatusUpdateRequest.getStatus()
+                            .equals(ParticipationRequestStatus.CONFIRMED)) {
+                        participation.setStatus(ParticipationRequestStatus.CONFIRMED);
+                        confirmedRequests.add(participationMapper.mapToDto(participation));
+                    }
+                    if (eventRequestStatusUpdateRequest.getStatus()
+                            .equals(ParticipationRequestStatus.REJECTED)) {
+                        participation.setStatus(ParticipationRequestStatus.REJECTED);
+                        rejectedRequests.add(participationMapper.mapToDto(participation));
+                    }
+                    participationRepository.updateParticipationStatusById(eventRequestStatusUpdateRequest.getStatus(),
+                            participation.getId());
                 }
-                if (eventRequestStatusUpdateRequest.getStatus()
-                        .equals(ParticipationRequestStatus.REJECTED.toString())) {
-                    rejectedRequests.add(participationMapper.mapToDto(participation));
-                }
-                participationRepository.updateParticipationStatusById(eventRequestStatusUpdateRequest.getStatus(),
-                        participation.getId());
             }
-        }
 
         if (confirmedRequests.isEmpty() && rejectedRequests.isEmpty()) {
             log.error("Participation status is not PENDING");

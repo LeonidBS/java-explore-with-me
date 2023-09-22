@@ -13,80 +13,134 @@ import ru.practicum.ewmservice.event.model.State;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface EventRepository extends JpaRepository<Event, Integer> {
-
-    List<Event> findByInitiatorIdInAndStateInAndCategoryIdInAndEventDateBetweenOrderByEventDate(
-            List<Integer> users, List<State> states, List<Integer> categories,
-            LocalDateTime rangeStart, LocalDateTime rangeEnd, Pageable page);
-
-    Page<Event> findByInitiatorId(Integer initiatorId, Pageable page);
-
-    List<Event> findByCategoryId(Integer catId);
-
-    List<Event> findByIdIn(List<Integer> eventIds);
-
-    Integer findInitiatorIdById(Integer eventId);
-
-    State findStateById(Integer eventId);
-
-    Integer findParticipantLimitById(Integer eventId);
-
-    Boolean findRequestModerationById(Integer eventId);
-
-    @Modifying(clearAutomatically = true)
-    @Query("UPDATE Event e " +
-            "SET e.views = e.views + 1" +
-            "WHERE e.id IN ?2 ")
-    void updateViewByEventIds(List<Integer> eventIds);
-
-    List<Integer> findIdByInitiatorId(Integer userId);
-
-    @Modifying(clearAutomatically = true)
-    @Query("UPDATE Event e " +
-            "SET e.views = e.views + 1" +
-            "WHERE e.id = ?2 ")
-    void updateViewByEventId(Integer eventId);
 
     @Query("SELECT e " +
             "FROM Event AS e " +
             "LEFT JOIN e.initiator " +
             "LEFT JOIN e.category " +
-            "WHERE LOWER(e.annotation) LIKE LOWER(CONCAT('%', :text, '%')) " +
-            "AND e.state = 'PULISHED' " +
-            "AND e.category IN (:categories) " +
-            "AND e.paid = :paid " +
+            "LEFT JOIN e.location " +
+            "WHERE e.id = ?1")
+    Optional<Event> findByIdFetch(Integer id);
+
+    Page<Event> findByInitiatorIdInAndStateInAndCategoryIdInAndEventDateBetweenOrderByEventDateDescIdAsc(
+            List<Integer> users, List<State> states, List<Integer> categories,
+            LocalDateTime rangeStart, LocalDateTime rangeEnd, Pageable page);
+
+    Page<Event> findByStateInAndEventDateBetweenOrderByEventDateDescIdAsc(
+            List<State> states, LocalDateTime rangeStart, LocalDateTime rangeEnd, PageRequest page);
+
+    Page<Event> findByStateInAndCategoryIdInAndEventDateBetweenOrderByEventDateDescIdAsc(
+            List<State> states, List<Integer> categories,
+            LocalDateTime rangeStart, LocalDateTime rangeEnd, PageRequest page);
+
+    Page<Event> findByInitiatorIdInAndStateInAndEventDateBetweenOrderByEventDateDescIdAsc(
+            List<Integer> users, List<State> states, LocalDateTime rangeStart,
+            LocalDateTime rangeEnd, PageRequest page);
+
+    Page<Event> findByInitiatorIdInAndStateInAndCategoryIdInOrderByEventDateDescIdAsc(
+            List<Integer> users, List<State> states, List<Integer> categories,
+            PageRequest page);
+
+    Page<Event> findByInitiatorIdInAndStateInOrderByEventDateDescIdAsc(
+            List<Integer> users, List<State> states, PageRequest page);
+
+    Page<Event> findByStateInAndCategoryIdInOrderByEventDateDescIdAsc(
+            List<State> states, List<Integer> categories, PageRequest page);
+
+    Page<Event> findByStateInOrderByEventDateDescIdAsc(List<State> states, PageRequest page);
+
+    Page<Event> findByInitiatorIdOrderByEventDateDescIdAsc(Integer initiatorId, Pageable page);
+
+    List<Event> findByInitiatorIdOrderByEventDateDescIdAsc(Integer initiatorId);
+
+    List<Event> findByCategoryId(Integer catId);
+
+    List<Event> findByIdIn(List<Integer> eventIds);
+
+    @Query
+            ("SELECT e.id " +
+                    "FROM Event AS e " +
+                    "WHERE e.id = ?1 ")
+    Integer findInitiatorIdById(Integer eventId);
+
+    @Query
+            ("SELECT e.state " +
+                    "FROM Event AS e " +
+                    "WHERE e.id = ?1 ")
+    State findStateById(Integer eventId);
+
+    @Query
+            ("SELECT e.participantLimit " +
+                    "FROM Event AS e " +
+                    "WHERE e.id = ?1 ")
+    Integer findParticipantLimitById(Integer eventId);
+
+    @Query
+            ("SELECT e.requestModeration " +
+                    "FROM Event AS e " +
+                    "WHERE e.id = ?1 ")
+    Boolean findRequestModerationById(Integer eventId);
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Event e " +
+            "SET e.views = e.views + 1 " +
+            "WHERE e.id IN ?1 ")
+    void updateViewByEventIds(List<Integer> eventIds);
+
+    @Query("SELECT e.id " +
+            "FROM Event AS e " +
+            "LEFT JOIN e.initiator i " +
+            "WHERE i.id = ?1 ")
+    List<Integer> findIdByInitiatorId(Integer userId);
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Event e " +
+            "SET e.views = e.views + 1 " +
+            "WHERE e.id = ?1")
+    void updateViewByEventId(Integer eventId);
+
+    @Query("SELECT e " +
+            "FROM Event AS e " +
+            "LEFT JOIN e.initiator i " +
+            "LEFT JOIN e.category c " +
+            "WHERE e.paid IN (:paid) " +
+            "AND LOWER(e.annotation) LIKE LOWER(CONCAT('%', :text, '%')) " +
+            "AND e.state = 'PUBLISHED' " +
+            "AND c.id IN (:categories) " +
             "AND e.eventDate > :now " +
             "ORDER BY " +
             "CASE WHEN :sort = 'EVENT_DATE' THEN e.eventDate END ASC, " +
             "CASE WHEN :sort = 'VIEWS' THEN e.views END ASC"
     )
-    List<Event> findByFiltersFromNow(@Param("text") String text,
+    Page<Event> findByFiltersFromNow(@Param("text") String text,
                                      @Param("categories") List<Integer> categories,
-                                     @Param("paid") Boolean paid,
+                                     @Param("paid") List<Boolean> paids,
                                      @Param("now") LocalDateTime now,
                                      @Param("sort") String sort,
                                      PageRequest page);
 
     @Query("SELECT e " +
             "FROM Event AS e " +
-            "LEFT JOIN e.initiator " +
-            "LEFT JOIN e.category " +
-            "WHERE LOWER(e.annotation) LIKE LOWER(CONCAT('%', :text, '%')) " +
-            "AND e.state = 'PULISHED' " +
-            "AND e.category IN (:categories) " +
-            "AND e.paid = :paid " +
+            "LEFT JOIN e.initiator i " +
+            "LEFT JOIN e.category c " +
+            "WHERE e.paid IN (:paid) " +
+            "AND LOWER(e.annotation) LIKE LOWER(CONCAT('%', :text, '%')) " +
+            "AND e.state = 'PUBLISHED' " +
+            "AND c.id IN (:categories) " +
             "AND e.eventDate BETWEEN :rangeStart AND :rangeEnd " +
             "ORDER BY " +
             "CASE WHEN :sort = 'EVENT_DATE' THEN e.eventDate END ASC, " +
             "CASE WHEN :sort = 'VIEWS' THEN e.views END ASC"
     )
-    List<Event> findByFiltersInDateRange(@Param("text") String text,
+    Page<Event> findByFiltersInDateRange(@Param("text") String text,
                                          @Param("categories") List<Integer> categories,
-                                         @Param("paid") Boolean paid,
+                                         @Param("paid") List<Boolean> paids,
                                          @Param("rangeStart") LocalDateTime rangeStart,
                                          @Param("rangeEnd") LocalDateTime rangeEnd,
-                                         @Param("sort") String sort, PageRequest page);
-
+                                         @Param("sort") String sort,
+                                         PageRequest page);
 }

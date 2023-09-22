@@ -3,7 +3,10 @@ package ru.practicum.ewmservice.exception;
 import org.hibernate.HibernateException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingPathVariableException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -62,6 +65,18 @@ public class ErrorHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.CONFLICT)
+    public ApiError handHttpMessageNotReadableException(final HttpMessageNotReadableException e) {
+        return ApiError.builder()
+                .errors(null)
+                .message(e.getMessage())
+                .reason("HttpMessageNotReadableException")
+                .status(HttpStatus.CONFLICT)
+                .timestamp(LocalDateTime.now())
+                .build();
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.CONFLICT)
     public ApiError handRequestErrorException(final EventValidationException e) {
         return ApiError.builder()
                 .errors(null)
@@ -91,6 +106,30 @@ public class ErrorHandler {
                 .errors(null)
                 .message(e.getMessage())
                 .reason("Validation Error")
+                .status(HttpStatus.BAD_REQUEST)
+                .timestamp(LocalDateTime.now())
+                .build();
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiError handleMissingPathVariableException(final MissingPathVariableException e) {
+        return ApiError.builder()
+                .errors(null)
+                .message(e.getMessage())
+                .reason("Incorrectly made request.")
+                .status(HttpStatus.BAD_REQUEST)
+                .timestamp(LocalDateTime.now())
+                .build();
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiError handleMissingServletRequestParameterException(final MissingServletRequestParameterException e) {
+        return ApiError.builder()
+                .errors(null)
+                .message(e.getMessage())
+                .reason("Incorrectly made request.")
                 .status(HttpStatus.BAD_REQUEST)
                 .timestamp(LocalDateTime.now())
                 .build();
@@ -140,12 +179,12 @@ public class ErrorHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ApiError handleIllegalArgumentException(final MethodArgumentTypeMismatchException e) {
+    public ApiError handleMethodArgumentTypeMismatchException(final MethodArgumentTypeMismatchException e) {
         return ApiError.builder()
                 .errors(List.of("Unknown state: " + e.getValue()))
                 .message(e.getMessage())
                 .reason("Argument parsing error.")
-                .status(HttpStatus.NOT_FOUND)
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .timestamp(LocalDateTime.now())
                 .build();
     }
@@ -158,7 +197,7 @@ public class ErrorHandler {
                 .errors(null)
                 .message("Произошла непредвиденная ошибка." + "\n" + e.getMessage() + e)
                 .reason("Internal Server Error.")
-                .status(HttpStatus.NOT_FOUND)
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .timestamp(LocalDateTime.now())
                 .build();
     }

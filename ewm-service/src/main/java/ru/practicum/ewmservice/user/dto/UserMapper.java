@@ -18,18 +18,6 @@ public class UserMapper {
         }
     }
 
-    public static User mapToUser(UserDto userDto) {
-        if (userDto != null) {
-            return new User(
-                    userDto.getId(),
-                    userDto.getName(),
-                    userDto.getEmail()
-            );
-        } else {
-            return null;
-        }
-    }
-
     public static List<UserDto> mapListToUserDto(List<User> users) {
         List<UserDto> usersDto = new ArrayList<>();
         for (User user : users) {

@@ -11,28 +11,33 @@ import java.util.List;
 public interface ParticipationRepository extends JpaRepository<Participation, Integer> {
     List<Participation> findByRequesterId(Integer userId);
 
+    @Query("SELECT p " +
+            "FROM Participation AS p " +
+            "LEFT JOIN p.event e " +
+            "LEFT JOIN p.requester r " +
+            "WHERE r.id = ?1 AND " +
+            "e.id = ?2 ")
     List<Participation> findByRequesterIdAndEventId(Integer userId, Integer eventId);
 
     @Query("SELECT COUNT(*) " +
             "FROM Participation AS p " +
-            "WHERE p.event.id = ?1 " +
-            "GROUP BY p.event.id ")
+            "WHERE p.event.id = ?1")
     Integer findParticipationCountByEventId(Integer eventId);
 
     @Query("SELECT COUNT(*) " +
             "FROM Participation AS p " +
-            "WHERE p.event.id = ?1 AND " +
-            "p.status = ?2 " +
-            "GROUP BY p.event.id ")
-    Integer findParticipationCountByEventIdAndStatus(Integer id, ParticipationRequestStatus participationRequestStatus);
+            "LEFT JOIN p.event e " +
+            "WHERE e.id = ?1 AND " +
+            "p.status = ?2 ")
+    Integer findParticipationCountByEventIdAndStatus(Integer eventId, ParticipationRequestStatus participationRequestStatus);
 
     List<Participation> findByEventId(Integer eventId);
 
     @Modifying(clearAutomatically = true)
     @Query("UPDATE Participation p " +
-            "SET p.status = ?1" +
+            "SET p.status = ?1 " +
             "WHERE p.id = ?2 ")
-    void updateParticipationStatusById (String status, Integer participationId);
+    void updateParticipationStatusById(ParticipationRequestStatus status, Integer participationId);
 
     List<Participation> findByIdIn(List<Integer> requestIds);
 }

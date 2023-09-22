@@ -4,18 +4,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.ewmservice.compilation.repository.CompilationRepository;
 import ru.practicum.ewmservice.compilation.dto.CompilationDto;
 import ru.practicum.ewmservice.compilation.dto.CompilationMapper;
 import ru.practicum.ewmservice.compilation.dto.NewCompilationDto;
 import ru.practicum.ewmservice.compilation.dto.UpdateCompilationRequest;
 import ru.practicum.ewmservice.compilation.model.Compilation;
+import ru.practicum.ewmservice.compilation.repository.CompilationRepository;
 import ru.practicum.ewmservice.event.repository.EventRepository;
 import ru.practicum.ewmservice.exception.IdNotFoundException;
 
 @Slf4j
 @Service
-@Transactional(readOnly = true)
+@Transactional
 @RequiredArgsConstructor
 public class CompilationAdmServiceImpl implements CompilationAdmService {
     private final CompilationRepository compilationRepository;
@@ -23,15 +23,18 @@ public class CompilationAdmServiceImpl implements CompilationAdmService {
     private final EventRepository eventRepository;
 
     @Override
-    public CompilationDto create(NewCompilationDto newCompilationDto) {
+    public CompilationDto saveCompilation(NewCompilationDto newCompilationDto) {
 
         Compilation compilation = Compilation.builder()
-                .events(eventRepository.findByIdIn(newCompilationDto.getEvents()))
-                .pinned(newCompilationDto.getPinned())
+                .events(newCompilationDto.getEvents() != null ?
+                        eventRepository.findByIdIn(newCompilationDto.getEvents()) : null)
+                .pinned(newCompilationDto.getPinned() != null ?
+                        newCompilationDto.getPinned() : false)
                 .title(newCompilationDto.getTitle())
                 .build();
 
         log.debug("Compilation has been created: {}", compilation);
+
         return compilationMapper.mapToDto(compilationRepository.save(compilation));
     }
 
@@ -40,15 +43,19 @@ public class CompilationAdmServiceImpl implements CompilationAdmService {
 
         Compilation existedCompilation = compilationRepository.findById(compId)
                 .orElseThrow(() -> {
-                    log.error("Compilation with ID {} has not been found", compId);
-                    return new IdNotFoundException("There is no Compilation with ID: " + compId);
+                    log.error("Compilation with id={}} was not found", compId);
+                    return new IdNotFoundException(String.format("Compilation with id=%d was not found", compId));
                 });
 
         Compilation compilation = Compilation.builder()
                 .id(existedCompilation.getId())
-                .events(eventRepository.findByIdIn(updateCompilationRequest.getEvents()))
-                .pinned(updateCompilationRequest.getPinned())
-                .title(updateCompilationRequest.getTitle())
+                .events(updateCompilationRequest.getEvents() != null ?
+                        eventRepository.findByIdIn(updateCompilationRequest.getEvents()) :
+                        existedCompilation.getEvents())
+                .pinned(updateCompilationRequest.getPinned() != null ?
+                        updateCompilationRequest.getPinned() : existedCompilation.getPinned())
+                .title(updateCompilationRequest.getTitle() != null ?
+                        updateCompilationRequest.getTitle() : existedCompilation.getTitle())
                 .build();
 
         log.debug("Category has been updated: {}", compilation);
@@ -57,6 +64,6 @@ public class CompilationAdmServiceImpl implements CompilationAdmService {
 
     @Override
     public void deleteById(Integer compId) {
-
+        compilationRepository.deleteById(compId);
     }
 }

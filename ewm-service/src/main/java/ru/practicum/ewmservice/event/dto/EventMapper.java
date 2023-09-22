@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import ru.practicum.ewmservice.category.dto.CategoryMapper;
 import ru.practicum.ewmservice.event.model.Event;
-import ru.practicum.ewmservice.event.model.State;
 import ru.practicum.ewmservice.participation.model.ParticipationRequestStatus;
 import ru.practicum.ewmservice.participation.repository.ParticipationRepository;
 import ru.practicum.ewmservice.user.dto.UserMapper;
@@ -23,13 +22,16 @@ public class EventMapper {
         return new EventFullDto(
                 entity.getId(),
                 entity.getAnnotation(),
-                categoryMapper.mapToDto(entity.getCategory()),
-                participationRepository.findParticipationCountByEventIdAndStatus(entity.getId(),
-                        ParticipationRequestStatus.CONFIRMED),
+                entity.getCategory() != null ?
+                        categoryMapper.mapToDto(entity.getCategory()) : null,
+                entity.getId() != null ?
+                        participationRepository.findParticipationCountByEventIdAndStatus(entity.getId(),
+                                ParticipationRequestStatus.CONFIRMED) : null,
                 entity.getCreatedOn(),
                 entity.getDescription(),
                 entity.getEventDate(),
-                UserMapper.mapToUserShortDto(entity.getInitiator()),
+                entity.getInitiator() != null ?
+                        UserMapper.mapToUserShortDto(entity.getInitiator()) : null,
                 entity.getLocation(),
                 entity.getPaid(),
                 entity.getParticipantLimit(),
@@ -54,12 +56,15 @@ public class EventMapper {
         return new EventShortDto(
                 entity.getId(),
                 entity.getAnnotation(),
-                categoryMapper.mapToDto(entity.getCategory()),
-                participationRepository.findParticipationCountByEventIdAndStatus(entity.getId(),
-                        ParticipationRequestStatus.CONFIRMED),
+                entity.getCategory() != null ?
+                        categoryMapper.mapToDto(entity.getCategory()) : null,
+                entity.getId() != null ?
+                        participationRepository.findParticipationCountByEventIdAndStatus(entity.getId(),
+                                ParticipationRequestStatus.CONFIRMED) : null,
                 entity.getDescription(),
                 entity.getEventDate(),
-                UserMapper.mapToUserShortDto(entity.getInitiator()),
+                entity.getInitiator() != null ?
+                        UserMapper.mapToUserShortDto(entity.getInitiator()) : null,
                 entity.getPaid(),
                 entity.getTitle(),
                 entity.getViews()

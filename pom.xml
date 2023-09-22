@@ -11,6 +11,7 @@
     </parent>
 
     <name>Explore With Me</name>
+
     <modules>
         <module>stats-service</module>
         <module>ewm-service</module>
@@ -28,6 +29,13 @@
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>ru.practicum</groupId>
+            <artifactId>stats-client</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+
     <dependency>
         <groupId>org.postgresql</groupId>
         <artifactId>postgresql</artifactId>

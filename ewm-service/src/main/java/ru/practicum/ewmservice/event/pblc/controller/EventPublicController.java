@@ -2,6 +2,7 @@ package ru.practicum.ewmservice.event.pblc.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewmservice.event.dto.EventFullDto;
@@ -22,13 +23,15 @@ public class EventPublicController {
     private final EventPublicService eventPublicService;
 
     @GetMapping
-    public List<EventShortDto> getByFilters(@RequestParam String text,
-                                            @RequestParam List<Integer> categories,
-                                            @RequestParam Boolean paid,
+    public List<EventShortDto> getByFilters(@RequestParam(defaultValue = "") String text,
+                                            @RequestParam(required = false) List<Integer> categories,
+                                            @RequestParam(required = false) Boolean paid,
+                                            @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
                                             @RequestParam(required = false) LocalDateTime rangeStart,
+                                            @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
                                             @RequestParam(required = false) LocalDateTime rangeEnd,
-                                            @RequestParam Boolean onlyAvailable,
-                                            @RequestParam String sort,
+                                            @RequestParam(defaultValue = "false") Boolean onlyAvailable,
+                                            @RequestParam(defaultValue = "EVENT_DATE") String sort,
                                             @RequestParam(defaultValue = "0") @PositiveOrZero Integer from,
                                             @RequestParam(defaultValue = "10") @PositiveOrZero Integer size,
                                             HttpServletRequest httpServletRequest) {

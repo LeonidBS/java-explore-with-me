@@ -3,10 +3,9 @@ package ru.practicum.ewmservice.validation;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 import java.time.Duration;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-public class DateValidator implements ConstraintValidator<FutureInDuration, LocalDate> {
+public class DateValidator implements ConstraintValidator<FutureInDuration, LocalDateTime> {
     private Duration duration;
 
     @Override
@@ -15,12 +14,12 @@ public class DateValidator implements ConstraintValidator<FutureInDuration, Loca
     }
 
     @Override
-    public boolean isValid(LocalDate eventDate,
+    public boolean isValid(LocalDateTime eventDate,
                            ConstraintValidatorContext cxt) {
         if (eventDate != null) {
-            return Duration.between(eventDate, LocalDateTime.now())
-                    .compareTo(duration) > 0;
+            return  Duration.between(eventDate, LocalDateTime.now())
+                    .compareTo(duration) < 0;
         }
-        return false;
+        return true;
     }
 }

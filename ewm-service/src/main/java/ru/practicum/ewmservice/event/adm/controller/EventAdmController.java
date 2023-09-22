@@ -24,15 +24,15 @@ public class EventAdmController {
     private final EventAdmService eventAdmService;
 
     @GetMapping
-    public List<EventFullDto> getEventsForByAdmin(@RequestParam List<Integer> users,
-                                                  @RequestParam List<State> states,
-                                                  @RequestParam List<Integer> categories,
+    public List<EventFullDto> getEventsForByAdmin(@RequestParam(required = false) List<Integer> users,
+                                                  @RequestParam(required = false) List<State> states,
+                                                  @RequestParam(required = false) List<Integer> categories,
                                                   @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-                                                  @RequestParam LocalDateTime rangeStart,
+                                                  @RequestParam(required = false) LocalDateTime rangeStart,
                                                   @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-                                                  @RequestParam LocalDateTime rangeEnd,
-                                                  @RequestParam(defaultValue = "0") @PositiveOrZero Integer from,
-                                                  @RequestParam(defaultValue = "10") @PositiveOrZero Integer size) {
+                                                  @RequestParam(required = false) LocalDateTime rangeEnd,
+                                                  @PositiveOrZero @RequestParam(defaultValue = "0") Integer from,
+                                                  @PositiveOrZero @RequestParam(defaultValue = "10") Integer size) {
 
         return eventAdmService.findEventsByAdmin(users, states, categories, rangeStart, rangeEnd, from, size);
     }

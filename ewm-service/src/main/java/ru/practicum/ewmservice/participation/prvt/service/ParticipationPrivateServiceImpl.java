@@ -4,17 +4,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.ewmservice.compilation.dto.CompilationDto;
 import ru.practicum.ewmservice.event.model.Event;
 import ru.practicum.ewmservice.event.model.State;
 import ru.practicum.ewmservice.event.repository.EventRepository;
+import ru.practicum.ewmservice.exception.IdNotFoundException;
+import ru.practicum.ewmservice.exception.ParticipationRequestException;
 import ru.practicum.ewmservice.participation.dto.ParticipationDto;
 import ru.practicum.ewmservice.participation.dto.ParticipationMapper;
 import ru.practicum.ewmservice.participation.model.Participation;
 import ru.practicum.ewmservice.participation.model.ParticipationRequestStatus;
 import ru.practicum.ewmservice.participation.repository.ParticipationRepository;
-import ru.practicum.ewmservice.exception.IdNotFoundException;
-import ru.practicum.ewmservice.exception.ParticipationRequestException;
 import ru.practicum.ewmservice.user.model.User;
 import ru.practicum.ewmservice.user.repository.UserRepository;
 
@@ -40,7 +39,8 @@ public class ParticipationPrivateServiceImpl implements ParticipationPrivateServ
     }
 
     @Override
-    public ParticipationDto create(Integer userId, Integer eventId) {
+    @Transactional
+    public ParticipationDto saveParticipation(Integer userId, Integer eventId) {
 
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> {
@@ -50,9 +50,14 @@ public class ParticipationPrivateServiceImpl implements ParticipationPrivateServ
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> {
-                    log.error("Event with ID {} has not been found", userId);
-                    return new IdNotFoundException("There is no Event with ID: " + userId);
+                    log.error("User with ID {} has not been found", userId);
+                    return new IdNotFoundException("There is no User with ID: " + userId);
                 });
+
+        if (event.getInitiator().equals(user)) {
+            log.error("Event Initiator is equal Participation requester");
+            throw new ParticipationRequestException("Event Initiator is equal Participation requester");
+        }
 
         if (!participationRepository.findByRequesterIdAndEventId(userId, eventId).isEmpty()) {
             log.error("ParticipationRequest of requester ID {} and Event ID {} is exist", userId, eventId);
@@ -67,28 +72,32 @@ public class ParticipationPrivateServiceImpl implements ParticipationPrivateServ
         }
 
         if (!eventRepository.findStateById(eventId).equals(State.PUBLISHED)) {
-            log.error("Event staus is not PUBLISHED");
+            log.error("Event state is not PUBLISHED");
             throw new ParticipationRequestException("Event staus is not PUBLISHED");
         }
 
-        if (eventRepository.findParticipantLimitById(eventId)
-                >= participationRepository.findParticipationCountByEventId(eventId) ) {
-            log.error("Event state is not PUBLISHED");
-            throw new ParticipationRequestException("Event state is not PUBLISHED");
+        if (eventRepository.findParticipantLimitById(eventId) > 0) {
+            if (eventRepository.findParticipantLimitById(eventId)
+                    <= participationRepository.findParticipationCountByEventId(eventId)) {
+                log.error("ParticipationLimit is reached");
+                throw new ParticipationRequestException("ParticipationLimit is reached");
+            }
         }
 
         Participation participation = Participation.builder()
                 .created(LocalDateTime.now())
                 .event(event)
                 .requester(user)
-                .status(eventRepository.findRequestModerationById(eventId)
-                        ? ParticipationRequestStatus.PENDING : ParticipationRequestStatus.CONFIRMED)
+                .status(!eventRepository.findRequestModerationById(eventId)
+                        || eventRepository.findParticipantLimitById(eventId) == 0
+                        ? ParticipationRequestStatus.CONFIRMED : ParticipationRequestStatus.PENDING)
                 .build();
 
         return participationMapper.mapToDto(participationRepository.save(participation));
     }
 
     @Override
+    @Transactional
     public ParticipationDto update(Integer userId, Integer requestId) {
 
         Participation existParticipation = participationRepository.findById(requestId)
@@ -97,7 +106,7 @@ public class ParticipationPrivateServiceImpl implements ParticipationPrivateServ
                     return new IdNotFoundException("There is no Event with ID: " + requestId);
                 });
 
-        User user = userRepository.findById(userId)
+        userRepository.findById(userId)
                 .orElseThrow(() -> {
                     log.error("Event with ID {} has not been found", userId);
                     return new IdNotFoundException("There is no Event with ID: " + userId);

@@ -2,6 +2,7 @@ package ru.practicum.ewmservice.compilation.pblc.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewmservice.compilation.dto.CompilationDto;
@@ -21,9 +22,16 @@ public class CompilationPublicServiceImpl implements CompilationPublicService {
     private final CompilationMapper compilationMapper;
 
     @Override
-    public List<CompilationDto> findByPinned(Boolean pinned) {
+    public List<CompilationDto> findCompilation(Boolean pinned, Integer from, Integer size) {
+        PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size);
 
-        return compilationMapper.mapListToDto(compilationRepository.findByPinned(pinned));
+        if (pinned != null) {
+            return compilationMapper.mapListToDto(compilationRepository
+                    .findByPinned(pinned, page).toList());
+        } else {
+            return compilationMapper.mapListToDto(compilationRepository
+                    .findAll(page).toList());
+        }
     }
 
     @Override

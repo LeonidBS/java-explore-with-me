@@ -1,11 +1,13 @@
 package ru.practicum.ewmservice.event.dto;
 
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.sun.istack.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.validator.constraints.Length;
 import ru.practicum.ewmservice.event.model.Location;
 import ru.practicum.ewmservice.validation.FutureInDuration;
 
@@ -20,16 +22,19 @@ import java.time.LocalDateTime;
 public class NewEventDto {
 
     @NotBlank
+    @Length(min = 20, max = 2000)
     String annotation;
 
     @PositiveOrZero
     private Integer category;
 
     @NotBlank
+    @Length(min = 20, max = 7000)
     private String description;
 
-    @FutureInDuration(duration = "P2H")
+    @FutureInDuration(duration = "PT2H")
     @NotNull
+    @JsonFormat(pattern = "yyyy-MM-dd' 'HH:mm:ss")
     private LocalDateTime eventDate;
 
     @NotNull
@@ -43,5 +48,6 @@ public class NewEventDto {
     private Boolean requestModeration;
 
     @NotBlank
+    @Length(min = 3, max = 120)
     private String title;
 }

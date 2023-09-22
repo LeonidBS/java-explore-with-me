@@ -2,6 +2,7 @@ package ru.practicum.ewmservice.category.adm.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewmservice.category.adm.service.CategoryAdmService;
@@ -20,6 +21,7 @@ public class CategoryAdmController {
     private final CategoryAdmService categoryAdmService;
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public CategoryDto create(@RequestBody @Valid NewCategoryDto newCategoryDto) {
 
         return categoryAdmService.create(newCategoryDto);
@@ -32,6 +34,7 @@ public class CategoryAdmController {
     }
 
     @DeleteMapping("/{catId}")
+    @ResponseStatus(value = HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Integer catId) {
 
         categoryAdmService.deleteById(catId);

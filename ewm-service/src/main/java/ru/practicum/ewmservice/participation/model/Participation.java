@@ -20,6 +20,7 @@ public class Participation {
     public static final String DATE_PATTERN = "yyyy-MM-ddTHH:mm:ss";
 
     @Id
+    @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
@@ -37,6 +38,7 @@ public class Participation {
     @ToString.Exclude
     private User requester;
 
+    @Enumerated(EnumType.STRING)
     @Column
     private ParticipationRequestStatus status;
 }

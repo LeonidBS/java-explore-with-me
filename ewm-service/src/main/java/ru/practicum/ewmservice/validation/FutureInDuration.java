@@ -10,7 +10,7 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface FutureInDuration {
 
-    String message() default "Event Date must be later than now for hours";
+    String message() default "Event Date must be in future";
 
     String duration();
 
