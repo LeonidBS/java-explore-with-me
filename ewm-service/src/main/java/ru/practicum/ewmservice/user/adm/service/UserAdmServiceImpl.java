@@ -6,12 +6,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewmservice.event.repository.EventRepository;
+import ru.practicum.ewmservice.exception.IdNotFoundException;
 import ru.practicum.ewmservice.user.dto.NewUserRequest;
 import ru.practicum.ewmservice.user.dto.UserDto;
 import ru.practicum.ewmservice.user.dto.UserMapper;
 import ru.practicum.ewmservice.user.model.User;
 import ru.practicum.ewmservice.user.repository.UserRepository;
-import ru.practicum.ewmservice.exception.IdNotFoundException;
 
 import java.util.List;
 

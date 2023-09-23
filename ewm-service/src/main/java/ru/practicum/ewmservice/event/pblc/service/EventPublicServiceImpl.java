@@ -7,12 +7,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewmservice.category.repository.CategoryRepository;
-import ru.practicum.ewmservice.event.model.Event;
-import ru.practicum.ewmservice.event.model.State;
-import ru.practicum.ewmservice.event.repository.EventRepository;
 import ru.practicum.ewmservice.event.dto.EventFullDto;
 import ru.practicum.ewmservice.event.dto.EventMapper;
 import ru.practicum.ewmservice.event.dto.EventShortDto;
+import ru.practicum.ewmservice.event.model.Event;
+import ru.practicum.ewmservice.event.model.State;
+import ru.practicum.ewmservice.event.repository.EventRepository;
 import ru.practicum.ewmservice.exception.IdNotFoundException;
 import ru.practicum.ewmservice.exception.MyValidationException;
 import ru.practicum.ewmservice.participation.model.ParticipationRequestStatus;
@@ -164,8 +164,8 @@ public class EventPublicServiceImpl implements EventPublicService {
     private Boolean statsGet(HttpServletRequest httpServletRequest) {
         List<String> uris = List.of(httpServletRequest.getRemoteAddr()
                 + httpServletRequest.getRequestURI());
-        String[] response = statsClient.findStats(LocalDateTime.parse("2000-05-05T00:00:00"),
-                        LocalDateTime.parse("2050-05-05T00:00:00"), uris, true).getBody().toString()
+        String[] response = statsClient.findStats(LocalDateTime.parse("2000-01-05T00:00:00"),
+                        LocalDateTime.parse("2050-01-05T00:00:00"), uris, true).getBody().toString()
                 .split("\"hits\": ");
 
         if (response != null && !response[0].equals("[]")) {

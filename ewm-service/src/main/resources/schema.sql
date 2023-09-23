@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS participation
     CONSTRAINT fk_participation_to_event
         FOREIGN KEY (event_id) REFERENCES events (id),
     user_id  INT,
-    CONSTRAINT fk_events_to_users
+    CONSTRAINT fk_participation_to_users
         FOREIGN KEY (user_id) REFERENCES users (id),
     status   VARCHAR(32)
 );

@@ -36,6 +36,17 @@ public class StatsServiceImpl implements StatsService {
             }
         }
 
+        if (start == null && end != null) {
+            log.error("Start is NULL, while END is {}", end);
+            throw new MyValidationException("Start is NULL, while End is " + end);
+        }
+
+        if (end == null && start != null) {
+            log.error("End is NULL, while Start is {}", end);
+            throw new MyValidationException("End is NULL, while Start is " + end);
+        }
+
+
         if (unique) {
             if (uris != null && !uris.isEmpty()) {
 

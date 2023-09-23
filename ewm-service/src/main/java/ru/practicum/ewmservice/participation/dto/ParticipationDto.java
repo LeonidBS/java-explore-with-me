@@ -1,7 +1,10 @@
 package ru.practicum.ewmservice.participation.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import ru.practicum.ewmservice.participation.model.ParticipationRequestStatus;
 
 import javax.validation.constraints.FutureOrPresent;
