@@ -13,6 +13,8 @@ import ru.practicum.ewmservice.compilation.repository.CompilationRepository;
 import ru.practicum.ewmservice.event.repository.EventRepository;
 import ru.practicum.ewmservice.exception.IdNotFoundException;
 
+import java.util.HashSet;
+
 @Slf4j
 @Service
 @Transactional
@@ -27,7 +29,7 @@ public class CompilationAdmServiceImpl implements CompilationAdmService {
 
         Compilation compilation = Compilation.builder()
                 .events(newCompilationDto.getEvents() != null ?
-                        eventRepository.findByIdIn(newCompilationDto.getEvents()) : null)
+                        new HashSet<>(eventRepository.findByIdIn(newCompilationDto.getEvents())) : null)
                 .pinned(newCompilationDto.getPinned() != null ?
                         newCompilationDto.getPinned() : false)
                 .title(newCompilationDto.getTitle())
@@ -50,7 +52,7 @@ public class CompilationAdmServiceImpl implements CompilationAdmService {
         Compilation compilation = Compilation.builder()
                 .id(existedCompilation.getId())
                 .events(updateCompilationRequest.getEvents() != null ?
-                        eventRepository.findByIdIn(updateCompilationRequest.getEvents()) :
+                        new HashSet<>(eventRepository.findByIdIn(updateCompilationRequest.getEvents())) :
                         existedCompilation.getEvents())
                 .pinned(updateCompilationRequest.getPinned() != null ?
                         updateCompilationRequest.getPinned() : existedCompilation.getPinned())

@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.ewmservice.category.dto.CategoryMapper;
 import ru.practicum.ewmservice.category.model.Category;
 import ru.practicum.ewmservice.category.repository.CategoryRepository;
 import ru.practicum.ewmservice.event.dto.*;
@@ -24,11 +25,16 @@ import ru.practicum.ewmservice.participation.model.ParticipationRequestStatus;
 import ru.practicum.ewmservice.participation.repository.ParticipationRepository;
 import ru.practicum.ewmservice.user.model.User;
 import ru.practicum.ewmservice.user.repository.UserRepository;
+import ru.practicum.statsclient.client.StatsClient;
+import ru.practicum.statsdto.ViewStatsDto;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -42,23 +48,38 @@ public class EventPrivateServiceImpl implements EventPrivateService {
     private final CategoryRepository categoryRepository;
     private final ParticipationMapper participationMapper;
     private final LocationRepository locationRepository;
+    private final CategoryMapper categoryMapper;
+    private final StatsClient statsClient;
 
     @Override
     public List<EventShortDto> findByInitiatorId(Integer userId, Integer from, Integer size) {
-        PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size);
-        List<Integer> eventIds = List.copyOf(eventRepository.findIdByInitiatorId(userId));
-
-        if (!eventIds.isEmpty()) {
-            eventRepository.updateViewByEventIds(eventIds);
-        }
-
+        PageRequest page = PageRequest.of(from / size, size);
         List<Event> events = eventRepository.findByInitiatorIdOrderByEventDateDescIdAsc(userId, page).toList();
 
-        for (Event event : events) {
-            eventRepository.updateViewByEventId(event.getId());
+        List<Integer> eventIds = events.stream()
+                .map(Event::getId)
+                .collect(Collectors.toList());
+        List<Integer> participationCounts = participationRepository.findParticipationCountByEventIdsStatus(eventIds,
+                ParticipationRequestStatus.CONFIRMED);
+        List<EventShortDto> dtos = eventMapper.mapListToShortDto(events);
+        List<String> uris = events.stream()
+                .map(event -> "/events/" + event.getId())
+                .collect(Collectors.toList());
+        Map<Integer, Integer> statsMap = statsGet(uris);
+
+        for (int i = 0; i < dtos.size(); i++) {
+            dtos.get(i).setCategory(categoryMapper.mapToDto(events.get(i).getCategory()));
+            if (!participationCounts.isEmpty()) {
+                dtos.get(i).setConfirmedRequests(participationCounts.get(i));
+
+                if (!statsMap.isEmpty()) {
+                    dtos.get(i).setViews(statsMap.get(dtos.get(i).getId()));
+                }
+
+            }
         }
 
-        return eventMapper.mapListToShortDto(events);
+        return dtos;
     }
 
     @Override
@@ -102,20 +123,20 @@ public class EventPrivateServiceImpl implements EventPrivateService {
                 .title(newEventDto.getTitle())
                 .publishedOn(null)
                 .state(State.PENDING)
-                .views(0)
                 .build();
 
         log.debug("Event has been created: {}", event);
-        return eventMapper.mapToDto(eventRepository.save(event));
+
+        EventFullDto dto = eventMapper.mapToDto(eventRepository.save(event));
+        dto.setViews(0);
+        dto.setCategory(categoryMapper.mapToDto(event.getCategory()));
+        return dto;
     }
 
     @Override
     public EventFullDto findByIdAndInitiatorId(Integer userId, Integer eventId) {
-        Event event = checkEventInitiator(userId, eventId);
 
-        eventRepository.updateViewByEventId(eventId);
-
-        return eventMapper.mapToDto(event);
+        return createFullDto(checkEventInitiator(userId, eventId));
     }
 
     @Override
@@ -130,17 +151,14 @@ public class EventPrivateServiceImpl implements EventPrivateService {
 
         if (Duration.between(event.getEventDate(), LocalDateTime.now())
                 .compareTo(Duration.parse("PT2H")) >= 0) {
-            log.error("Event Date must be after for 2 hours");
             throw new AccessDeniedException("Event Date must be after for 2 hours");
         }
 
         if (event.getState().equals(State.PUBLISHED)) {
-            log.error("Only pending or canceled events can be changed");
             throw new AccessDeniedException("Only pending or canceled events can be changed");
         }
 
         if (!event.getInitiator().getId().equals(userId)) {
-            log.error("Initiator ID of Event with ID {} is not equal userId {} ", eventId, userId);
             throw new MyValidationException(String.format("Initiator ID of Event with ID %d is not equal userId %d",
                     eventId, userId));
         }
@@ -183,7 +201,7 @@ public class EventPrivateServiceImpl implements EventPrivateService {
             }
         }
 
-        return eventMapper.mapToDto(eventRepository.save(event));
+        return createFullDto(eventRepository.save(event));
     }
 
     @Override
@@ -215,26 +233,25 @@ public class EventPrivateServiceImpl implements EventPrivateService {
         List<ParticipationDto> confirmedRequests = new ArrayList<>();
         List<ParticipationDto> rejectedRequests = new ArrayList<>();
 
-            for (Participation participation : participationRepository
-                    .findByIdIn(eventRequestStatusUpdateRequest.getRequestIds())) {
-                if (participation.getStatus().equals(ParticipationRequestStatus.PENDING)) {
-                    if (eventRequestStatusUpdateRequest.getStatus()
-                            .equals(ParticipationRequestStatus.CONFIRMED)) {
-                        participation.setStatus(ParticipationRequestStatus.CONFIRMED);
-                        confirmedRequests.add(participationMapper.mapToDto(participation));
-                    }
-                    if (eventRequestStatusUpdateRequest.getStatus()
-                            .equals(ParticipationRequestStatus.REJECTED)) {
-                        participation.setStatus(ParticipationRequestStatus.REJECTED);
-                        rejectedRequests.add(participationMapper.mapToDto(participation));
-                    }
-                    participationRepository.updateParticipationStatusById(eventRequestStatusUpdateRequest.getStatus(),
-                            participation.getId());
+        for (Participation participation : participationRepository
+                .findByIdIn(eventRequestStatusUpdateRequest.getRequestIds())) {
+            if (participation.getStatus().equals(ParticipationRequestStatus.PENDING)) {
+                if (eventRequestStatusUpdateRequest.getStatus()
+                        .equals(ParticipationRequestStatus.CONFIRMED)) {
+                    participation.setStatus(ParticipationRequestStatus.CONFIRMED);
+                    confirmedRequests.add(participationMapper.mapToDto(participation));
                 }
+                if (eventRequestStatusUpdateRequest.getStatus()
+                        .equals(ParticipationRequestStatus.REJECTED)) {
+                    participation.setStatus(ParticipationRequestStatus.REJECTED);
+                    rejectedRequests.add(participationMapper.mapToDto(participation));
+                }
+                participationRepository.updateParticipationStatusById(eventRequestStatusUpdateRequest.getStatus(),
+                        participation.getId());
             }
+        }
 
         if (confirmedRequests.isEmpty() && rejectedRequests.isEmpty()) {
-            log.error("Participation status is not PENDING");
             throw new AccessDeniedException("Participation status is not PENDING");
         }
 
@@ -253,11 +270,42 @@ public class EventPrivateServiceImpl implements EventPrivateService {
                 });
 
         if (!event.getInitiator().getId().equals(userId)) {
-            log.error("Initiator ID of Event with ID {} is not equal userId {} ", eventId, userId);
             throw new MyValidationException(String.format("Initiator ID of Event with ID %d is not equal userId %d",
                     eventId, userId));
         }
 
         return event;
+    }
+
+    private EventFullDto createFullDto(Event event) {
+        Integer participationCounts = participationRepository.findParticipationCountByEventIdAndStatus(event.getId(),
+                ParticipationRequestStatus.CONFIRMED);
+        EventFullDto dto = eventMapper.mapToDto(event);
+        dto.setCategory(categoryMapper.mapToDto(event.getCategory()));
+        Map<Integer, Integer> statsMap = statsGet(List.of("/events/" + event.getId()));
+
+        if (!statsMap.isEmpty()) {
+            dto.setViews(statsMap.get(event.getId()));
+        }
+
+        if (participationCounts != 0) {
+            dto.setConfirmedRequests(participationCounts);
+        }
+
+        return dto;
+    }
+
+    private Map<Integer, Integer> statsGet(List<String> uris) {
+        List<ViewStatsDto> response = statsClient.findStats(LocalDateTime.parse("2000-01-05T00:00:00"),
+                LocalDateTime.parse("2050-01-05T00:00:00"), uris, true);
+        Map<Integer, Integer> statsMap = new HashMap<>();
+
+        if (!response.isEmpty()) {
+            for (ViewStatsDto viewStatsDto : response) {
+                statsMap.put(Integer.parseInt(viewStatsDto.getUri().substring(8)), viewStatsDto.getHits());
+            }
+        }
+
+        return statsMap;
     }
 }

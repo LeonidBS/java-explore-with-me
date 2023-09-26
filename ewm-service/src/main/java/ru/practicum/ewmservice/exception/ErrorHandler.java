@@ -1,5 +1,6 @@
 package ru.practicum.ewmservice.exception;
 
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.HibernateException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -19,6 +20,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
+@Slf4j
 public class ErrorHandler {
 
     @ResponseBody
@@ -35,6 +37,7 @@ public class ErrorHandler {
                         )
                 )
                 .collect(Collectors.toList());
+         log.error(violations.toString());
         return new ValidationErrorResponse(violations);
     }
 
@@ -47,6 +50,7 @@ public class ErrorHandler {
         final List<Violation> violations = e.getBindingResult().getFieldErrors().stream()
                 .map(error -> new Violation(error.getField(), error.getDefaultMessage()))
                 .collect(Collectors.toList());
+        log.error(violations.toString());
         return new ValidationErrorResponse(violations);
     }
 
@@ -54,6 +58,7 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.CONFLICT)
     public ApiError handHibernateException(final DataIntegrityViolationException e) {
+        log.error(e.getMessage());
         return ApiError.builder()
                 .errors(null)
                 .message(e.getMessage())
@@ -66,6 +71,7 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.CONFLICT)
     public ApiError handHttpMessageNotReadableException(final HttpMessageNotReadableException e) {
+        log.error(e.getMessage());
         return ApiError.builder()
                 .errors(null)
                 .message(e.getMessage())
@@ -78,6 +84,7 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.CONFLICT)
     public ApiError handRequestErrorException(final EventValidationException e) {
+        log.error(e.getMessage());
         return ApiError.builder()
                 .errors(null)
                 .message(e.getMessage())
@@ -90,6 +97,7 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.CONFLICT)
     public ApiError handRequestErrorException(final ParticipationRequestException e) {
+        log.error(e.getMessage());
         return ApiError.builder()
                 .errors(null)
                 .message(e.getMessage())
@@ -102,6 +110,7 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiError handleMyValidationException(final MyValidationException e) {
+        log.error(e.getMessage());
         return ApiError.builder()
                 .errors(null)
                 .message(e.getMessage())
@@ -114,6 +123,7 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiError handleMissingPathVariableException(final MissingPathVariableException e) {
+        log.error(e.getMessage());
         return ApiError.builder()
                 .errors(null)
                 .message(e.getMessage())
@@ -126,6 +136,7 @@ public class ErrorHandler {
     @ExceptionHandler(MissingServletRequestParameterException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiError handleMissingServletRequestParameterException(final MissingServletRequestParameterException e) {
+        log.error(e.getMessage());
         return ApiError.builder()
                 .errors(null)
                 .message(e.getMessage())
@@ -138,6 +149,7 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.CONFLICT)
     public ApiError handleAccessDeniedException(final AccessDeniedException e) {
+        log.error(e.getMessage());
         return ApiError.builder()
                 .errors(null)
                 .message(e.getMessage())
@@ -150,12 +162,14 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.CONFLICT)
     public HibernateException handleHibernateException(final HibernateException e) {
+        log.error(e.getMessage());
         return new HibernateException(e.getMessage());
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ApiError handleRequestOfNotExistUserException(final IdNotFoundException e) {
+        log.error(e.getMessage());
         return ApiError.builder()
                 .errors(null)
                 .message(e.getMessage())
@@ -168,6 +182,7 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ApiError handleApprovingException(final ApprovingException e) {
+        log.error(e.getMessage());
         return ApiError.builder()
                 .errors(null)
                 .message(e.getMessage())
@@ -180,6 +195,7 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ApiError handleMethodArgumentTypeMismatchException(final MethodArgumentTypeMismatchException e) {
+        log.error(e.getMessage());
         return ApiError.builder()
                 .errors(List.of("Unknown state: " + e.getValue()))
                 .message(e.getMessage())
@@ -192,7 +208,7 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ApiError handleThrowable(final Throwable e) {
-
+        log.error(e.getMessage());
         return ApiError.builder()
                 .errors(null)
                 .message("Произошла непредвиденная ошибка." + "\n" + e.getMessage() + e)

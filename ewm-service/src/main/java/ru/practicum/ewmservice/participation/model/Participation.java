@@ -15,7 +15,6 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@ToString
 public class Participation {
     public static final String DATE_PATTERN = "yyyy-MM-ddTHH:mm:ss";
 

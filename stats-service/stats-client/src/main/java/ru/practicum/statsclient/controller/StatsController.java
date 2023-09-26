@@ -4,11 +4,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.statsclient.client.StatsClient;
 import ru.practicum.statsdto.EndpointHitDto;
+import ru.practicum.statsdto.ViewStatsDto;
 
 import javax.validation.Valid;
 import java.time.LocalDateTime;
@@ -23,7 +23,7 @@ public class StatsController {
     private final StatsClient statsClient;
 
     @GetMapping("/stats")
-    public ResponseEntity<Object> findStats(@DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    public List<ViewStatsDto> findStats(@DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
                                             @RequestParam(required = false) LocalDateTime start,
                                             @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
                                             @RequestParam(required = false) LocalDateTime end,
@@ -35,7 +35,7 @@ public class StatsController {
 
     @PostMapping("/hit")
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<Object> addStats(@RequestBody @Valid EndpointHitDto endpointHitDto) {
+    public EndpointHitDto addStats(@RequestBody @Valid EndpointHitDto endpointHitDto) {
 
         return statsClient.addStats(endpointHitDto);
     }

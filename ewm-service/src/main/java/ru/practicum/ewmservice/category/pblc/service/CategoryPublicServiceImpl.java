@@ -23,7 +23,7 @@ public class CategoryPublicServiceImpl implements CategoryPublicService {
 
     @Override
     public List<CategoryDto> findAll(Integer from, Integer size) {
-        PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size);
+        PageRequest page = PageRequest.of(from / size, size);
 
         return categoryMapper.mapListToDto(categoryRepository.findAll(page).toList());
     }

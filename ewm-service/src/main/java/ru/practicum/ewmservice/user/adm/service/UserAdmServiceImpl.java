@@ -26,7 +26,7 @@ public class UserAdmServiceImpl implements UserAdmService {
 
     @Override
     public List<UserDto> findByIds(List<Integer> ids, int from, int size) {
-        PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size);
+        PageRequest page = PageRequest.of(from / size, size);
 
         if (ids != null) {
             return UserMapper.mapListToUserDto(userRepository.findByIdIn(ids, page).toList());
@@ -53,13 +53,11 @@ public class UserAdmServiceImpl implements UserAdmService {
     @Transactional
     public void deleteById(Integer id) {
 
-        if (userRepository.findById(id).isEmpty()) {
-            log.error("User with id={} was not found", id);
+        if (!userRepository.existsById(id)) {
             throw new IdNotFoundException(String.format("User with id=%d was not found", id));
         }
 
         if (!eventRepository.findByInitiatorIdOrderByEventDateDescIdAsc(id).isEmpty()) {
-            log.error("User has created Event, it cannot be deleted");
             throw new IdNotFoundException("User has created Event, it cannot be deleted");
         }
 

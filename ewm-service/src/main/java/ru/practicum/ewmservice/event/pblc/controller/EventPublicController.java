@@ -37,13 +37,13 @@ public class EventPublicController {
                                             HttpServletRequest httpServletRequest) {
 
         return eventPublicService.findByFilters(text, categories, paid, rangeStart, rangeEnd,
-                onlyAvailable, sort, from, size, httpServletRequest);
+                onlyAvailable, sort, from, size, httpServletRequest.getRemoteAddr(), httpServletRequest.getRequestURI());
     }
 
     @GetMapping("/{id}")
     public EventFullDto getById(@PositiveOrZero @PathVariable Integer id,
                                 HttpServletRequest httpServletRequest) {
 
-        return eventPublicService.findById(id, httpServletRequest);
+        return eventPublicService.findById(id, httpServletRequest.getRemoteAddr(), httpServletRequest.getRequestURI());
     }
 }

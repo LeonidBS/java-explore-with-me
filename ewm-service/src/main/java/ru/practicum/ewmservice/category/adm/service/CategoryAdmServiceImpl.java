@@ -58,14 +58,12 @@ public class CategoryAdmServiceImpl implements CategoryAdmService {
     @Transactional
     public void deleteById(Integer catId) {
 
-        if (categoryRepository.findById(catId).isEmpty()) {
-            log.error("Category with ID {} has not been found", catId);
+        if (!categoryRepository.existsById(catId)) {
             throw new IdNotFoundException(String.format(
                     "Category with ID %d has not been found", catId));
         }
 
         if (!eventRepository.findByCategoryId(catId).isEmpty()) {
-            log.error("Category with ID {} has used. It cannot be deleted", catId);
             throw new AccessDeniedException(String.format(
                     "Category with ID %s has used. It cannot be deleted", catId));
         }

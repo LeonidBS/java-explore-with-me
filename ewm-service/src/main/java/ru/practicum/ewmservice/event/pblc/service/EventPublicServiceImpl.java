@@ -3,9 +3,9 @@ package ru.practicum.ewmservice.event.pblc.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.ewmservice.category.dto.CategoryMapper;
 import ru.practicum.ewmservice.category.repository.CategoryRepository;
 import ru.practicum.ewmservice.event.dto.EventFullDto;
 import ru.practicum.ewmservice.event.dto.EventMapper;
@@ -20,10 +20,10 @@ import ru.practicum.ewmservice.participation.repository.ParticipationRepository;
 import ru.practicum.statsclient.client.StatsClient;
 import ru.practicum.statsdto.EndpointHitDto;
 
-import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -36,13 +36,14 @@ public class EventPublicServiceImpl implements EventPublicService {
     private final StatsClient statsClient;
     private final ParticipationRepository participationRepository;
     private final CategoryRepository categoryRepository;
+    private final CategoryMapper categoryMapper;
 
     @Override
     public List<EventShortDto> findByFilters(String text, List<Integer> categories, Boolean paid,
                                              LocalDateTime rangeStart, LocalDateTime rangeEnd,
                                              Boolean onlyAvailable, String sort, Integer from,
-                                             Integer size, HttpServletRequest httpServletRequest) {
-        PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size);
+                                             Integer size, String ip, String uri) {
+        PageRequest page = PageRequest.of(from / size, size);
 
         if (categories == null) {
             categories = List.copyOf(categoryRepository.findAllIds());
@@ -55,81 +56,73 @@ public class EventPublicServiceImpl implements EventPublicService {
             paidList = List.of(paid);
         }
 
-
-        Boolean uniqueFlag = statsGet(httpServletRequest);
-        if (uniqueFlag) log.debug("Request has been added to Stats," +
-                statsRequest(httpServletRequest).toString());
-
-        List<Event> events = new ArrayList<>();
+        List<Event> events;
 
         if (rangeStart == null && rangeEnd == null) {
             if (onlyAvailable) {
+                events = eventRepository.findByFiltersFromNow(text, categories,
+                        paidList, LocalDateTime.now(), page).toList();
 
-                for (Event event : eventRepository.findByFiltersFromNow(text, categories,
-                        paidList, LocalDateTime.now(), sort, page).toList()) {
-                    events.add(event);
-                    eventRepository.updateViewByEventId(event.getId());
+                if (sort.equals("VIEWS")) {
+                    return createShortDtoList(events).stream()
+                            .filter(dto -> dto.getConfirmedRequests() >= events.get(dto.getId()).getParticipantLimit())
+                            .sorted(Comparator.comparing(EventShortDto::getViews))
+                            .collect(Collectors.toList());
+                } else {
+                    return createShortDtoList(events).stream()
+                            .filter(dto -> dto.getConfirmedRequests() >= events.get(dto.getId()).getParticipantLimit())
+                            .collect(Collectors.toList());
                 }
 
-                return events.stream()
-                        .filter(event ->
-                                participationRepository.findParticipationCountByEventIdAndStatus(event.getId(),
-                                        ParticipationRequestStatus.CONFIRMED) >= event.getParticipantLimit()
-                        )
-                        .map(eventMapper::mapToShortDto)
-                        .collect(Collectors.toList());
             } else {
+                events = eventRepository.findByFiltersFromNow(text, categories,
+                        paidList, LocalDateTime.now(), page).toList();
 
-                for (Event event : eventRepository.findByFiltersFromNow(text, categories,
-                        paidList, LocalDateTime.now(), sort, page).toList()) {
-                    events.add(event);
-                    eventRepository.updateViewByEventId(event.getId());
+                if (sort.equals("VIEWS")) {
+                    return createShortDtoList(events).stream()
+                            .sorted(Comparator.comparing(EventShortDto::getViews))
+                            .collect(Collectors.toList());
+                } else {
+                    return createShortDtoList(events);
                 }
 
-                return events.stream()
-                        .map(eventMapper::mapToShortDto)
-                        .collect(Collectors.toList());
             }
 
         } else {
 
             if (!rangeEnd.isAfter(rangeStart)) {
-                log.error("Start must be before End");
                 throw new MyValidationException("Start must be before End");
             }
 
             if (onlyAvailable) {
-
-                for (Event event : eventRepository.findByFiltersInDateRange(text, categories,
-                        paidList, rangeStart, rangeEnd, sort, page).toList()) {
-                    events.add(event);
-                    eventRepository.updateViewByEventId(event.getId());
+                events = eventRepository.findByFiltersInDateRange(text, categories,
+                        paidList, rangeStart, rangeEnd, page).toList();
+                if (sort.equals("VIEWS")) {
+                    return createShortDtoList(events).stream()
+                            .filter(dto -> dto.getConfirmedRequests() >= events.get(dto.getId()).getParticipantLimit())
+                            .sorted(Comparator.comparing(EventShortDto::getViews))
+                            .collect(Collectors.toList());
+                } else {
+                    return createShortDtoList(events).stream()
+                            .filter(dto -> dto.getConfirmedRequests() >= events.get(dto.getId()).getParticipantLimit())
+                            .collect(Collectors.toList());
                 }
-
-                return events.stream()
-                        .filter(event ->
-                                participationRepository.findParticipationCountByEventIdAndStatus(event.getId(),
-                                        ParticipationRequestStatus.CONFIRMED) >= event.getParticipantLimit()
-                        )
-                        .map(eventMapper::mapToShortDto)
-                        .collect(Collectors.toList());
             } else {
-
-                for (Event event : eventRepository.findByFiltersInDateRange(text, categories,
-                        paidList, rangeStart, rangeEnd, sort, page).toList()) {
-                    events.add(event);
-                    eventRepository.updateViewByEventId(event.getId());
+                events = eventRepository.findByFiltersInDateRange(text, categories,
+                        paidList, rangeStart, rangeEnd, page).toList();
+                if (sort.equals("VIEWS")) {
+                    return createShortDtoList(events).stream()
+                            .sorted(Comparator.comparing(EventShortDto::getViews))
+                            .collect(Collectors.toList());
+                } else {
+                    return createShortDtoList(events);
                 }
-
-                return events.stream()
-                        .map(eventMapper::mapToShortDto)
-                        .collect(Collectors.toList());
             }
         }
     }
 
     @Override
-    public EventFullDto findById(Integer id, HttpServletRequest httpServletRequest) {
+    public EventFullDto findById(Integer id, String ip, String uri) {
 
         Event existedEvent = eventRepository.findById(id)
                 .orElseThrow(() -> {
@@ -138,41 +131,76 @@ public class EventPublicServiceImpl implements EventPublicService {
                 });
 
         if (!existedEvent.getState().equals(State.PUBLISHED)) {
-            log.error("Event with id={} was not found", id);
             throw new IdNotFoundException(String.format("Event with id=%d was not found", id));
         }
 
-            if (statsGet(httpServletRequest)) {
-                log.debug("Request has been added to Stats," + statsRequest(httpServletRequest).toString());
-            }
-        EventFullDto dto = eventMapper.mapToDto(existedEvent);
-            dto.setViews(dto.getViews() + 1);
+        log.debug("Request has been added to Stats,");
+        statsAdd(ip, uri);
+        EventFullDto dto = createFullDto(existedEvent);
+        dto.setViews(dto.getViews() + 1);
+
         return dto;
     }
 
-    private ResponseEntity<Object> statsRequest(HttpServletRequest httpServletRequest) {
+    private void statsAdd(String ip, String uri) {
 
         EndpointHitDto endpointHitDto = EndpointHitDto.builder()
                 .app("ewm-service")
-                .uri(httpServletRequest.getRequestURI())
-                .ip(httpServletRequest.getRemoteAddr())
+                .uri(uri)
+                .ip(ip)
                 .timestamp(LocalDateTime.now())
                 .build();
-        return statsClient.addStats(endpointHitDto);
+
+        statsClient.addStats(endpointHitDto);
     }
 
-    private Boolean statsGet(HttpServletRequest httpServletRequest) {
-        List<String> uris = List.of(httpServletRequest.getRemoteAddr()
-                + httpServletRequest.getRequestURI());
-        String[] response = statsClient.findStats(LocalDateTime.parse("2000-01-05T00:00:00"),
-                        LocalDateTime.parse("2050-01-05T00:00:00"), uris, true).getBody().toString()
-                .split("\"hits\": ");
+    private Map<Integer, Integer> statsGet(List<String> uris) {
+        return statsClient.findStatsMap(LocalDateTime.parse("2000-01-05T00:00:00"),
+                LocalDateTime.parse("2050-01-05T00:00:00"), uris, true);
+    }
 
-        if (response != null && !response[0].equals("[]")) {
-            return false;
-        } else {
-            return true;
+    private List<EventShortDto> createShortDtoList(List<Event> events) {
+        List<Integer> eventIds = events.stream()
+                .map(Event::getId)
+                .collect(Collectors.toList());
+        List<Integer> participationCounts = participationRepository.findParticipationCountByEventIdsStatus(eventIds,
+                ParticipationRequestStatus.CONFIRMED);
+        List<EventShortDto> dtos = eventMapper.mapListToShortDto(events);
+        List<String> uris = events.stream()
+                .map(event -> "/events/" + event.getId())
+                .collect(Collectors.toList());
+        Map<Integer, Integer> statsMap = statsGet(uris);
 
+        for (int i = 0; i < dtos.size(); i++) {
+            dtos.get(i).setCategory(categoryMapper.mapToDto(events.get(i).getCategory()));
+            if (!participationCounts.isEmpty()) {
+                dtos.get(i).setConfirmedRequests(participationCounts.get(i));
+
+                if (!statsMap.isEmpty()) {
+                    dtos.get(i).setViews(statsMap.get(dtos.get(i).getId()));
+                }
+
+            }
         }
+
+        return dtos;
+    }
+
+    private EventFullDto createFullDto(Event event) {
+        Integer participationCounts = participationRepository.findParticipationCountByEventIdAndStatus(event.getId(),
+                ParticipationRequestStatus.CONFIRMED);
+        EventFullDto dto = eventMapper.mapToDto(event);
+        dto.setCategory(categoryMapper.mapToDto(event.getCategory()));
+        Map<Integer, Integer> statsMap = statsGet(List.of("/events/" + event.getId()));
+
+        if (!statsMap.isEmpty()) {
+            dto.setViews(statsMap.get(event.getId()));
+        }
+
+        if (participationCounts != 0) {
+            dto.setConfirmedRequests(participationCounts);
+        }
+
+        return dto;
     }
 }

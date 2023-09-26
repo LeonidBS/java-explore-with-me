@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.ewmservice.category.dto.CategoryMapper;
 import ru.practicum.ewmservice.category.repository.CategoryRepository;
 import ru.practicum.ewmservice.event.dto.EventFullDto;
 import ru.practicum.ewmservice.event.dto.EventMapper;
@@ -17,11 +18,17 @@ import ru.practicum.ewmservice.event.repository.LocationRepository;
 import ru.practicum.ewmservice.exception.EventValidationException;
 import ru.practicum.ewmservice.exception.IdNotFoundException;
 import ru.practicum.ewmservice.exception.MyValidationException;
+import ru.practicum.ewmservice.participation.model.ParticipationRequestStatus;
+import ru.practicum.ewmservice.participation.repository.ParticipationRepository;
+import ru.practicum.statsclient.client.StatsClient;
+import ru.practicum.statsdto.ViewStatsDto;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -32,16 +39,18 @@ public class EventAdmServiceImpl implements EventAdmService {
     private final EventMapper eventMapper;
     private final CategoryRepository categoryRepository;
     private final LocationRepository locationRepository;
+    private final ParticipationRepository participationRepository;
+    private final CategoryMapper categoryMapper;
+    private final StatsClient statsClient;
 
     @Override
     public List<EventFullDto> findEventsByAdmin(List<Integer> users, List<State> states,
                                                 List<Integer> categories, LocalDateTime rangeStart,
                                                 LocalDateTime rangeEnd, Integer from, Integer size) {
-        PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size);
+        PageRequest page = PageRequest.of(from / size, size);
 
         if (rangeStart != null && rangeEnd != null) {
             if (!rangeEnd.isAfter(rangeStart)) {
-                log.error("Start must be before End");
                 throw new MyValidationException("Start must be before End");
             }
         }
@@ -50,97 +59,76 @@ public class EventAdmServiceImpl implements EventAdmService {
             states = List.of(State.PENDING, State.PUBLISHED, State.CANCELED, State.REJECTED);
         }
 
-        List<Event> events = new ArrayList<>();
+        List<Event> events;
 
         if (users != null) {
             if (categories != null) {
                 if (rangeStart != null && rangeEnd != null) {
-
-                    for (Event event : eventRepository
-                            .findByInitiatorIdInAndStateInAndCategoryIdInAndEventDateBetweenOrderByEventDateDescIdAsc(
-                                    users, states, categories, rangeStart, rangeEnd, page).toList()) {
-                        event.setViews(event.getViews() + 1);
-                        events.add(eventRepository.save(event));
-                    }
-
+                    events = eventRepository.findByInitiatorStateCategoryEventDate(
+                            users, states, categories, rangeStart, rangeEnd, page).toList();
                 } else {
-
-                    for (Event event : eventRepository
-                            .findByInitiatorIdInAndStateInAndCategoryIdInOrderByEventDateDescIdAsc(
-                                    users, states, categories, page).toList()) {
-                        event.setViews(event.getViews() + 1);
-                        events.add(eventRepository.save(event));
-                    }
-
+                    events = eventRepository.findByInitiatorStateCategory(
+                            users, states, categories, page).toList();
                 }
             } else {
                 if (rangeStart != null && rangeEnd != null) {
-
-                    for (Event event : eventRepository
-                            .findByInitiatorIdInAndStateInAndEventDateBetweenOrderByEventDateDescIdAsc(
-                                    users, states, rangeStart, rangeEnd, page).toList()) {
-                        event.setViews(event.getViews() + 1);
-                        events.add(eventRepository.save(event));
-                    }
-
+                    events = eventRepository.findByInitiatorStateEventDate(
+                            users, states, rangeStart, rangeEnd, page).toList();
                 } else {
-
-                    for (Event event : eventRepository
+                    events = eventRepository
                             .findByInitiatorIdInAndStateInOrderByEventDateDescIdAsc(
-                                    users, states, page).toList()) {
-                        event.setViews(event.getViews() + 1);
-                        events.add(eventRepository.save(event));
-                    }
-
+                                    users, states, page).toList();
                 }
             }
         } else {
-
             if (categories != null) {
                 if (rangeStart != null && rangeEnd != null) {
-
-                    for (Event event : eventRepository
-                            .findByStateInAndCategoryIdInAndEventDateBetweenOrderByEventDateDescIdAsc(
-                                    states, categories, rangeStart, rangeEnd, page)) {
-                        event.setViews(event.getViews() + 1);
-                        events.add(eventRepository.save(event));
-                    }
-
+                    events = eventRepository
+                            .findByStateCategoryEventDate(
+                                    states, categories, rangeStart, rangeEnd, page).toList();
                 } else {
-
-                    for (Event event : eventRepository
+                    events = eventRepository
                             .findByStateInAndCategoryIdInOrderByEventDateDescIdAsc(
-                                    states, categories, page)) {
-                        event.setViews(event.getViews() + 1);
-                        events.add(eventRepository.save(event));
-                    }
-
+                                    states, categories, page).toList();
                 }
 
             } else {
                 if (rangeStart != null && rangeEnd != null) {
-
-                    for (Event event : eventRepository
-                            .findByStateInAndEventDateBetweenOrderByEventDateDescIdAsc(
-                                    states, rangeStart, rangeEnd, page).toList()) {
-                        event.setViews(event.getViews() + 1);
-                        events.add(eventRepository.save(event));
-                    }
-
+                    events = eventRepository
+                            .findByStateEventDate(
+                                    states, rangeStart, rangeEnd, page).toList();
                 } else {
 
-                    for (Event event : eventRepository
+                    events = eventRepository
                             .findByStateInOrderByEventDateDescIdAsc(
-                                    states, page).toList()) {
-                        event.setViews(event.getViews() + 1);
-                        events.add(eventRepository.save(event));
-                    }
-
+                                    states, page).toList();
                 }
             }
         }
 
-        return eventMapper.mapListToDto(events);
+        List<Integer> eventIds = events.stream()
+                .map(Event::getId)
+                .collect(Collectors.toList());
+        List<Integer> participationCounts = participationRepository.findParticipationCountByEventIdsStatus(eventIds,
+                ParticipationRequestStatus.CONFIRMED);
+        List<EventFullDto> dtos = eventMapper.mapListToDto(events);
+        List<String> uris = events.stream()
+                .map(event -> "/events/" + event.getId())
+                .collect(Collectors.toList());
+        Map<Integer, Integer> statsMap = statsGet(uris);
+
+        for (int i = 0; i < dtos.size(); i++) {
+            dtos.get(i).setCategory(categoryMapper.mapToDto(events.get(i).getCategory()));
+            if (!participationCounts.isEmpty()) {
+                dtos.get(i).setConfirmedRequests(participationCounts.get(i));
+
+                if (!statsMap.isEmpty()) {
+                    dtos.get(i).setViews(statsMap.get(dtos.get(i).getId()));
+                }
+
+            }
+        }
+        return dtos;
     }
 
     @Override
@@ -213,6 +201,31 @@ public class EventAdmServiceImpl implements EventAdmService {
         }
 
         log.debug("Event has been updated: {}", event);
-        return eventMapper.mapToDto(eventRepository.save(event));
+
+        Integer participationCounts = participationRepository.findParticipationCountByEventIdAndStatus(event.getId(),
+                ParticipationRequestStatus.CONFIRMED);
+        EventFullDto dto = eventMapper.mapToDto(event);
+        dto.setCategory(categoryMapper.mapToDto(event.getCategory()));
+        dto.setConfirmedRequests(participationCounts);
+        Map<Integer, Integer> statsMap = statsGet(List.of("/events/" + event.getId()));
+
+        if (!statsMap.isEmpty()) {
+            dto.setViews(statsMap.get(event.getId()));
+        }
+
+        return dto;
+    }
+
+    private Map<Integer, Integer> statsGet(List<String> uris) {
+        List<ViewStatsDto> response = statsClient.findStats(LocalDateTime.parse("2000-01-05T00:00:00"),
+                LocalDateTime.parse("2050-01-05T00:00:00"), uris, true);
+        Map<Integer, Integer> statsMap = new HashMap<>();
+
+        if (!response.isEmpty()) {
+            for (ViewStatsDto viewStatsDto : response) {
+                statsMap.put(Integer.parseInt(viewStatsDto.getUri().substring(8)), viewStatsDto.getHits());
+            }
+        }
+        return statsMap;
     }
 }

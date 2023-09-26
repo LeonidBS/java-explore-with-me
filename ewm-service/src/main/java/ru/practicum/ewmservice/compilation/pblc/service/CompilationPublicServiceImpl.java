@@ -23,7 +23,7 @@ public class CompilationPublicServiceImpl implements CompilationPublicService {
 
     @Override
     public List<CompilationDto> findCompilation(Boolean pinned, Integer from, Integer size) {
-        PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size);
+        PageRequest page = PageRequest.of(from / size, size);
 
         if (pinned != null) {
             return compilationMapper.mapListToDto(compilationRepository

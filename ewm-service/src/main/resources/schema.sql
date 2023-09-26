@@ -1,16 +1,16 @@
-drop table IF EXISTS users cascade;
-
-drop table IF EXISTS categories cascade;
-
-drop table IF EXISTS compilations cascade;
-
-drop table IF EXISTS event_compilation cascade;
-
-drop table IF EXISTS participation cascade;
-
-drop table IF EXISTS events cascade;
-
-drop table IF EXISTS locations cascade;
+-- drop table IF EXISTS users cascade;
+--
+-- drop table IF EXISTS categories cascade;
+--
+-- drop table IF EXISTS compilations cascade;
+--
+-- drop table IF EXISTS event_compilation cascade;
+--
+-- drop table IF EXISTS participation cascade;
+--
+-- drop table IF EXISTS events cascade;
+--
+-- drop table IF EXISTS locations cascade;
 
 CREATE TABLE IF NOT EXISTS users
 (
@@ -59,8 +59,7 @@ CREATE TABLE IF NOT EXISTS events
     published_on       TIMESTAMP WITHOUT TIME ZONE,
     request_moderation BOOLEAN,
     state              VARCHAR(32),
-    title              VARCHAR,
-    views              INT
+    title              VARCHAR
 );
 
 CREATE TABLE IF NOT EXISTS compilations

@@ -29,7 +29,17 @@ public interface ParticipationRepository extends JpaRepository<Participation, In
             "LEFT JOIN p.event e " +
             "WHERE e.id = ?1 AND " +
             "p.status = ?2 ")
-    Integer findParticipationCountByEventIdAndStatus(Integer eventId, ParticipationRequestStatus participationRequestStatus);
+    Integer findParticipationCountByEventIdAndStatus(Integer eventId,
+                                                     ParticipationRequestStatus participationRequestStatus);
+
+    @Query("SELECT COUNT(p.id) " +
+            "FROM Participation AS p " +
+            "LEFT JOIN p.event e " +
+            "WHERE e.id IN ?1 " +
+            "AND p.status = ?2 " +
+            "GROUP BY e.id ")
+    List<Integer> findParticipationCountByEventIdsStatus(List<Integer> eventId,
+                                                   ParticipationRequestStatus participationRequestStatus);
 
     List<Participation> findByEventId(Integer eventId);
 

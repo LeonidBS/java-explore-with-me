@@ -15,7 +15,6 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@ToString
 public class Event {
     public static final String DATE_PATTERN = "yyyy-MM-dd HH:mm:ss";
 
@@ -72,7 +71,4 @@ public class Event {
 
     @Column
     private String title;
-
-    @Column
-    private int views;
 }

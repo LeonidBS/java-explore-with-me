@@ -4,7 +4,7 @@ import lombok.*;
 import ru.practicum.ewmservice.event.model.Event;
 
 import javax.persistence.*;
-import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "compilations")
@@ -13,7 +13,6 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@ToString
 public class Compilation {
 
     @Id
@@ -27,7 +26,7 @@ public class Compilation {
             joinColumns = @JoinColumn(name = "compilation_id", referencedColumnName = "id"),
             inverseJoinColumns = @JoinColumn(name = "event_id", referencedColumnName = "id"))
     @ToString.Exclude
-    List<Event> events;
+    Set<Event> events;
 
     @Column
     private Boolean pinned;

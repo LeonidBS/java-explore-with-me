@@ -55,31 +55,26 @@ public class ParticipationPrivateServiceImpl implements ParticipationPrivateServ
                 });
 
         if (event.getInitiator().equals(user)) {
-            log.error("Event Initiator is equal Participation requester");
             throw new ParticipationRequestException("Event Initiator is equal Participation requester");
         }
 
         if (!participationRepository.findByRequesterIdAndEventId(userId, eventId).isEmpty()) {
-            log.error("ParticipationRequest of requester ID {} and Event ID {} is exist", userId, eventId);
             throw new ParticipationRequestException(String.format(
                     "ParticipationRequest of requester ID %d and Event ID %d is exist", userId, eventId));
         }
 
         if (eventRepository.findInitiatorIdById(eventId).equals(userId)) {
-            log.error("Event Initiator ID is equal userId {}", userId);
             throw new ParticipationRequestException(String.format(
                     "Event Initiator ID is equal userId %d", userId));
         }
 
         if (!eventRepository.findStateById(eventId).equals(State.PUBLISHED)) {
-            log.error("Event state is not PUBLISHED");
             throw new ParticipationRequestException("Event staus is not PUBLISHED");
         }
 
         if (eventRepository.findParticipantLimitById(eventId) > 0) {
             if (eventRepository.findParticipantLimitById(eventId)
                     <= participationRepository.findParticipationCountByEventId(eventId)) {
-                log.error("ParticipationLimit is reached");
                 throw new ParticipationRequestException("ParticipationLimit is reached");
             }
         }
@@ -106,11 +101,9 @@ public class ParticipationPrivateServiceImpl implements ParticipationPrivateServ
                     return new IdNotFoundException("There is no Event with ID: " + requestId);
                 });
 
-        userRepository.findById(userId)
-                .orElseThrow(() -> {
-                    log.error("Event with ID {} has not been found", userId);
-                    return new IdNotFoundException("There is no Event with ID: " + userId);
-                });
+       if (!userRepository.existsById(userId)) {
+                    throw new IdNotFoundException("There is no Event with ID: " + userId);
+                }
 
         existParticipation.setStatus(ParticipationRequestStatus.CANCELED);
 

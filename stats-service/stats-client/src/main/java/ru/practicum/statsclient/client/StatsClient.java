@@ -10,12 +10,17 @@ import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
+import ru.practicum.statsclient.exception.MyValidationException;
+import ru.practicum.statsclient.exception.ResponseEntityErrorException;
 import ru.practicum.statsdto.EndpointHitDto;
+import ru.practicum.statsdto.ViewStatsDto;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -27,8 +32,9 @@ public class StatsClient {
 
     private RestTemplate rest = new RestTemplate();
 
-    public ResponseEntity<Object> findStats(LocalDateTime start, LocalDateTime end,
-                                            List<String> uris, Boolean unique) {
+    public Map<Integer, Integer> findStatsMap(LocalDateTime start, LocalDateTime end,
+                                              List<String> uris, Boolean unique) {
+
         Map<String, Object> parameters;
         String datetimePattern = "yyyy-MM-dd HH:mm:ss";
         StringBuilder urisString = new StringBuilder();
@@ -46,21 +52,110 @@ public class StatsClient {
                     "uris", urisString.toString(),
                     "unique", unique
             );
-            return get(url + "/stats?start={start}&end={end}&uris={uris}&unique={unique}",
+            ResponseEntity<Object> response = get(url
+                            + "/stats?start={start}&end={end}&uris={uris}&unique={unique}",
                     parameters);
+            if (response.getStatusCodeValue() == 200) {
+                Map<Integer, Integer> statsMap = new HashMap<>();
+
+                for (ViewStatsDto viewStatsDto :
+                        (List<ViewStatsDto>) Objects.requireNonNull(response.getBody())) {
+                    statsMap.put(Integer.parseInt(viewStatsDto.getUri().substring(8)),
+                            viewStatsDto.getHits());
+                }
+
+                return statsMap;
+
+            } else if (response.getStatusCode().is4xxClientError()) {
+                throw new MyValidationException("Request is not correct");
+            } else {
+                throw new MyValidationException("Request is not correct");
+            }
+
         } else {
             parameters = Map.of(
                     "start", DateTimeFormatter.ofPattern(datetimePattern).format(start),
                     "end", DateTimeFormatter.ofPattern(datetimePattern).format(end),
                     "unique", unique
             );
-            return get(url + "/stats?start={start}&end={end}&unique={unique}",
+            ResponseEntity<Object> response = get(url
+                            + "/stats?start={start}&end={end}&unique={unique}",
                     parameters);
+
+            if (response.getStatusCodeValue() == 200) {
+                Map<Integer, Integer> statsMap = new HashMap<>();
+                for (ViewStatsDto viewStatsDto :
+                        (List<ViewStatsDto>) Objects.requireNonNull(response.getBody())) {
+                    statsMap.put(Integer.parseInt(viewStatsDto.getUri().substring(8)),
+                            viewStatsDto.getHits());
+                }
+
+                return statsMap;
+
+            } else if (response.getStatusCode().is4xxClientError()) {
+                throw new MyValidationException("Request is not correct");
+            } else {
+                throw new MyValidationException("Request is not correct");
+            }
+
         }
     }
 
-    public ResponseEntity<Object> addStats(EndpointHitDto endpointHitDto) {
-        return post(url + "/hit", endpointHitDto);
+    public List<ViewStatsDto> findStats(LocalDateTime start, LocalDateTime end,
+                                        List<String> uris, Boolean unique) {
+
+        Map<String, Object> parameters;
+        String datetimePattern = "yyyy-MM-dd HH:mm:ss";
+        StringBuilder urisString = new StringBuilder();
+        if (uris != null) {
+            int i = 0;
+            for (String s : uris) {
+                urisString.append(s);
+                if (++i < uris.size()) {
+                    urisString.append(",");
+                }
+            }
+            parameters = Map.of(
+                    "start", DateTimeFormatter.ofPattern(datetimePattern).format(start),
+                    "end", DateTimeFormatter.ofPattern(datetimePattern).format(end),
+                    "uris", urisString.toString(),
+                    "unique", unique
+            );
+            ResponseEntity<Object> response = get(url
+                            + "/stats?start={start}&end={end}&uris={uris}&unique={unique}",
+                    parameters);
+            if (response.getStatusCodeValue() == 200) {
+                return (List<ViewStatsDto>) response.getBody();
+            } else if (response.getStatusCode().is4xxClientError()) {
+                throw new ResponseEntityErrorException("Request is not correct");
+            } else {
+                throw new ResponseEntityErrorException("Request is not correct");
+            }
+
+        } else {
+            parameters = Map.of(
+                    "start", DateTimeFormatter.ofPattern(datetimePattern).format(start),
+                    "end", DateTimeFormatter.ofPattern(datetimePattern).format(end),
+                    "unique", unique
+            );
+            ResponseEntity<Object> response = get(url
+                            + "/stats?start={start}&end={end}&unique={unique}",
+                    parameters);
+
+            if (response.getStatusCodeValue() == 200) {
+                return (List<ViewStatsDto>) response.getBody();
+            } else if (response.getStatusCode().is4xxClientError()) {
+                throw new ResponseEntityErrorException("Request is not correct");
+            } else {
+                throw new ResponseEntityErrorException("Request is not correct");
+            }
+
+        }
+    }
+
+    public EndpointHitDto addStats(EndpointHitDto endpointHitDto) {
+
+        return (EndpointHitDto) post(url + "/hit", endpointHitDto).getBody();
     }
 
     protected ResponseEntity<Object> get(String path, @Nullable Map<String, Object> parameters) {
