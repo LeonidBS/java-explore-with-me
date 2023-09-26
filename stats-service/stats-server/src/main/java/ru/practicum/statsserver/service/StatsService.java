@@ -11,4 +11,6 @@ public interface StatsService {
                                  boolean unique, Integer from, Integer size);
 
     EndpointHitDto addStats(EndpointHitDto endpointHitDto);
+
+    Integer findHitByIpAndUri(String ip, String uri);
 }

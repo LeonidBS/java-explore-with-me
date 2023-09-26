@@ -10,17 +10,13 @@ import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
-import ru.practicum.statsclient.exception.MyValidationException;
 import ru.practicum.statsclient.exception.ResponseEntityErrorException;
 import ru.practicum.statsdto.EndpointHitDto;
 import ru.practicum.statsdto.ViewStatsDto;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -58,8 +54,7 @@ public class StatsClient {
             if (response.getStatusCodeValue() == 200) {
                 Map<Integer, Integer> statsMap = new HashMap<>();
 
-                for (ViewStatsDto viewStatsDto :
-                        (List<ViewStatsDto>) Objects.requireNonNull(response.getBody())) {
+                for (ViewStatsDto viewStatsDto : (ViewStatsDto[]) Objects.requireNonNull(response.getBody())) {
                     statsMap.put(Integer.parseInt(viewStatsDto.getUri().substring(8)),
                             viewStatsDto.getHits());
                 }
@@ -67,9 +62,9 @@ public class StatsClient {
                 return statsMap;
 
             } else if (response.getStatusCode().is4xxClientError()) {
-                throw new MyValidationException("Request is not correct");
+                throw new ResponseEntityErrorException("Bad request");
             } else {
-                throw new MyValidationException("Request is not correct");
+                throw new ResponseEntityErrorException("Request is not correct");
             }
 
         } else {
@@ -84,8 +79,7 @@ public class StatsClient {
 
             if (response.getStatusCodeValue() == 200) {
                 Map<Integer, Integer> statsMap = new HashMap<>();
-                for (ViewStatsDto viewStatsDto :
-                        (List<ViewStatsDto>) Objects.requireNonNull(response.getBody())) {
+                for (ViewStatsDto viewStatsDto : (ViewStatsDto[]) Objects.requireNonNull(response.getBody())) {
                     statsMap.put(Integer.parseInt(viewStatsDto.getUri().substring(8)),
                             viewStatsDto.getHits());
                 }
@@ -93,9 +87,9 @@ public class StatsClient {
                 return statsMap;
 
             } else if (response.getStatusCode().is4xxClientError()) {
-                throw new MyValidationException("Request is not correct");
+                throw new ResponseEntityErrorException("Bad request");
             } else {
-                throw new MyValidationException("Request is not correct");
+                throw new ResponseEntityErrorException("Request is not correct");
             }
 
         }
@@ -124,10 +118,10 @@ public class StatsClient {
             ResponseEntity<Object> response = get(url
                             + "/stats?start={start}&end={end}&uris={uris}&unique={unique}",
                     parameters);
-            if (response.getStatusCodeValue() == 200) {
-                return (List<ViewStatsDto>) response.getBody();
-            } else if (response.getStatusCode().is4xxClientError()) {
-                throw new ResponseEntityErrorException("Request is not correct");
+           if (response.getStatusCodeValue() == 200) {
+                return Arrays.asList((ViewStatsDto[]) Objects.requireNonNull(response.getBody()));
+           } else if (response.getStatusCode().is4xxClientError()) {
+                throw new ResponseEntityErrorException("Bad request");
             } else {
                 throw new ResponseEntityErrorException("Request is not correct");
             }
@@ -143,13 +137,30 @@ public class StatsClient {
                     parameters);
 
             if (response.getStatusCodeValue() == 200) {
-                return (List<ViewStatsDto>) response.getBody();
+                return Arrays.asList((ViewStatsDto[]) Objects.requireNonNull(response.getBody()));
             } else if (response.getStatusCode().is4xxClientError()) {
-                throw new ResponseEntityErrorException("Request is not correct");
+                throw new ResponseEntityErrorException("Bad request");
             } else {
                 throw new ResponseEntityErrorException("Request is not correct");
             }
 
+        }
+    }
+
+    public Integer findUrl(String ip, String uri) {
+        Map<String, Object> parameters;
+        parameters = Map.of(
+                "ip", ip,
+                "uri", uri
+        );
+        ResponseEntity<Object> response = getString(url + "/stats/url?ip={ip}&uri={uri}", parameters);
+
+        if (response.getStatusCodeValue() == 200) {
+            return (Integer) Objects.requireNonNull(response.getBody());
+        } else if (response.getStatusCode().is4xxClientError()) {
+            throw new ResponseEntityErrorException("Bad request");
+        } else {
+            throw new ResponseEntityErrorException("Request is not correct");
         }
     }
 
@@ -159,42 +170,36 @@ public class StatsClient {
     }
 
     protected ResponseEntity<Object> get(String path, @Nullable Map<String, Object> parameters) {
-        ResponseEntity<Object> statsServerResponse;
-
         try {
             assert parameters != null;
-            statsServerResponse = rest.exchange(path, HttpMethod.GET, null, Object.class, parameters);
+            ResponseEntity<?> responseEntity = rest.exchange(path, HttpMethod.GET,
+                    null, (Class<?>) ViewStatsDto[].class, parameters);
+            return ResponseEntity.status(responseEntity.getStatusCode()).body(responseEntity.getBody());
         } catch (HttpStatusCodeException e) {
             return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsByteArray());
         }
+    }
 
-        return prepareGatewayResponse(statsServerResponse);
+    protected ResponseEntity<Object> getString(String path, @Nullable Map<String, Object> parameters) {
+        try {
+            assert parameters != null;
+            ResponseEntity<?> responseEntity = rest.exchange(path, HttpMethod.GET,
+                    null, (Class<?>) Integer.class, parameters);
+            return ResponseEntity.status(responseEntity.getStatusCode()).body(responseEntity.getBody());
+        } catch (HttpStatusCodeException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsByteArray());
+        }
     }
 
     protected <T> ResponseEntity<Object> post(String path, T body) {
         HttpEntity<T> requestEntity = new HttpEntity<>(body);
-        ResponseEntity<Object> statsServerResponse;
 
         try {
-            statsServerResponse = rest.exchange(path, HttpMethod.POST, requestEntity, Object.class);
+            ResponseEntity<T> responseEntity = rest.exchange(path, HttpMethod.POST,
+                    requestEntity, (Class<T>) EndpointHitDto.class);
+            return ResponseEntity.status(responseEntity.getStatusCode()).body(responseEntity.getBody());
         } catch (HttpStatusCodeException e) {
             return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsByteArray());
         }
-
-        return prepareGatewayResponse(statsServerResponse);
-    }
-
-    private static ResponseEntity<Object> prepareGatewayResponse(ResponseEntity<Object> response) {
-        if (response.getStatusCode().is2xxSuccessful()) {
-            return response;
-        }
-
-        ResponseEntity.BodyBuilder responseBuilder = ResponseEntity.status(response.getStatusCode());
-
-        if (response.hasBody()) {
-            return responseBuilder.body(response.getBody());
-        }
-
-        return responseBuilder.build();
     }
 }

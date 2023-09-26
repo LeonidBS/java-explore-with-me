@@ -72,18 +72,28 @@ public class StatsServiceImpl implements StatsService {
             if (uris != null && !uris.isEmpty()) {
 
                 if (start != null && end != null) {
-                    return vMapper.mapListToDto(statsRepository
-                            .findViewStatsByList(start, end, uris, page).toList());
+                    if (uris.size() > 1) {
+                        return vMapper.mapListToDto(statsRepository
+                                .findViewStatsByList(start, end, uris, page).toList());
+                    } else {
+                        return vMapper.mapListToDto(statsRepository
+                                .findViewStatsByListLike(start, end, uris.get(0), page).toList());
+                    }
                 } else {
-                    return vMapper.mapListToDto(statsRepository
-                            .findViewStatsByListWithoutDates(uris, page).toList());
+                    if (uris.size() > 1) {
+                        return vMapper.mapListToDto(statsRepository
+                                .findViewStatsByListWithoutDates(uris, page).toList());
+                    } else {
+                        return vMapper.mapListToDto(statsRepository
+                                .findViewStatsByListWithoutDatesLike(uris.get(0), page).toList());
+                    }
                 }
 
             } else {
 
                 if (start != null && end != null) {
-                    return vMapper.mapListToDto(statsRepository
-                            .findAllViewStats(start, end, page).toList());
+                        return vMapper.mapListToDto(statsRepository
+                                .findAllViewStats(start, end, page).toList());
                 } else {
                     return vMapper.mapListToDto(statsRepository
                             .findAllViewStatsWithoutDates(page).toList());
@@ -98,4 +108,11 @@ public class StatsServiceImpl implements StatsService {
     public EndpointHitDto addStats(EndpointHitDto endpointHitDto) {
         return eMapper.mapToDto(statsRepository.save(eMapper.mapToEntity(endpointHitDto)));
     }
+
+    @Override
+    public Integer findHitByIpAndUri(String ip, String uri) {
+        return statsRepository.findHitByIpAndUri(ip, uri);
+    }
+
+
 }

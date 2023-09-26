@@ -12,7 +12,7 @@
     <artifactId>stats-dto</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
-    <name>stats-client</name>
+    <name>stats-dto</name>
 
     <properties>
         <java.version>11</java.version>

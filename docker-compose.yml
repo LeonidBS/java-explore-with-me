@@ -10,15 +10,9 @@ services:
     ports:
       - "8082:8082"
     depends_on:
-      stats-server:
-        condition: service_healthy
+      - stats-server
     environment:
       - STATS_SERVER_URL=http://stats-server:9090
-    healthcheck:
-      test: [ "CMD", "pg_isready" ]
-      interval: 1s
-      timeout: 5s
-      retries: 1
 
   stats-server:
     build:
@@ -34,8 +28,8 @@ services:
     healthcheck:
       test: [ "CMD", "pg_isready" ]
       interval: 1s
-      timeout: 5s
-      retries: 10
+      timeout: 2s
+      retries: 5
     environment:
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=root
@@ -67,10 +61,8 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      ewm-db:
-        condition: service_healthy
-      stats-client:
-        condition: service_healthy
+      - ewm-db
+      - stats-client
     environment:
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=root

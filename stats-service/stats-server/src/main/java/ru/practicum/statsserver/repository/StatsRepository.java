@@ -46,6 +46,16 @@ public interface StatsRepository extends JpaRepository<EndpointHit, Integer> {
             " COUNT(eh.ip)) " +
             "FROM EndpointHit AS eh " +
             "WHERE eh.timestamp BETWEEN ?1 AND ?2 " +
+            "AND LOWER(eh.uri) LIKE LOWER(CONCAT('%', ?3, '%')) " +
+            "GROUP BY eh.app, eh.uri " +
+            "ORDER BY COUNT(eh.ip) DESC ")
+    Page<ViewStats> findViewStatsByListLike(LocalDateTime start, LocalDateTime end,
+                                            String uri, PageRequest page);
+
+    @Query("SELECT new ru.practicum.statsserver.model.ViewStats(eh.app, eh.uri," +
+            " COUNT(eh.ip)) " +
+            "FROM EndpointHit AS eh " +
+            "WHERE eh.timestamp BETWEEN ?1 AND ?2 " +
             "GROUP BY eh.app, eh.uri " +
             "ORDER BY COUNT(eh.ip) DESC ")
     Page<ViewStats> findAllViewStats(LocalDateTime start, LocalDateTime end, PageRequest page);
@@ -76,7 +86,21 @@ public interface StatsRepository extends JpaRepository<EndpointHit, Integer> {
     @Query("SELECT new ru.practicum.statsserver.model.ViewStats(eh.app, eh.uri," +
             " COUNT(eh.ip)) " +
             "FROM EndpointHit AS eh " +
+            "WHERE LOWER(eh.uri) LIKE LOWER(CONCAT('%', ?1, '%')) " +
+            "GROUP BY eh.app, eh.uri " +
+            "ORDER BY COUNT(eh.ip) DESC ")
+    Page<ViewStats> findViewStatsByListWithoutDatesLike(String uri, PageRequest page);
+
+    @Query("SELECT new ru.practicum.statsserver.model.ViewStats(eh.app, eh.uri," +
+            " COUNT(eh.ip)) " +
+            "FROM EndpointHit AS eh " +
             "GROUP BY eh.app, eh.uri " +
             "ORDER BY COUNT(eh.ip) DESC ")
     Page<ViewStats> findAllViewStatsWithoutDates(PageRequest page);
+
+    @Query("SELECT count(*) " +
+            "FROM EndpointHit AS eh " +
+            "WHERE eh.ip LIKE ?1 " +
+            "AND eh.uri LIKE ?2 ")
+    Integer findHitByIpAndUri(String ip, String uri);
 }

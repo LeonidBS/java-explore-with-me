@@ -56,6 +56,7 @@ public class EventPublicServiceImpl implements EventPublicService {
             paidList = List.of(paid);
         }
 
+        log.debug("Save stats {}", statsAdd(ip, uri));
         List<Event> events;
 
         if (rangeStart == null && rangeEnd == null) {
@@ -134,15 +135,14 @@ public class EventPublicServiceImpl implements EventPublicService {
             throw new IdNotFoundException(String.format("Event with id=%d was not found", id));
         }
 
+        log.debug(statsAdd(ip, uri));
         log.debug("Request has been added to Stats,");
-        statsAdd(ip, uri);
-        EventFullDto dto = createFullDto(existedEvent);
-        dto.setViews(dto.getViews() + 1);
-
-        return dto;
+        return createFullDto(existedEvent);
     }
 
-    private void statsAdd(String ip, String uri) {
+    private String statsAdd(String ip, String uri) {
+
+        //  if (statsClient.findUrl(ip, uri) == 0) {
 
         EndpointHitDto endpointHitDto = EndpointHitDto.builder()
                 .app("ewm-service")
@@ -151,10 +151,15 @@ public class EventPublicServiceImpl implements EventPublicService {
                 .timestamp(LocalDateTime.now())
                 .build();
 
-        statsClient.addStats(endpointHitDto);
+        //         return statsClient.addStats(endpointHitDto).toString() + " saved";
+        //     } else {
+        //        return "URL is exist";
+        //    }
+        return statsClient.addStats(endpointHitDto).toString();
     }
 
     private Map<Integer, Integer> statsGet(List<String> uris) {
+
         return statsClient.findStatsMap(LocalDateTime.parse("2000-01-05T00:00:00"),
                 LocalDateTime.parse("2050-01-05T00:00:00"), uris, true);
     }

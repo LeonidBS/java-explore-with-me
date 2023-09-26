@@ -24,11 +24,11 @@ public class StatsController {
 
     @GetMapping("/stats")
     public List<ViewStatsDto> findStats(@DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-                                            @RequestParam(required = false) LocalDateTime start,
-                                            @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-                                            @RequestParam(required = false) LocalDateTime end,
-                                            @RequestParam(required = false) List<String> uris,
-                                            @RequestParam(defaultValue = "false") boolean unique) {
+                                        @RequestParam(required = false) LocalDateTime start,
+                                        @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+                                        @RequestParam(required = false) LocalDateTime end,
+                                        @RequestParam(required = false) List<String> uris,
+                                        @RequestParam(defaultValue = "false") boolean unique) {
 
         return statsClient.findStats(start, end, uris, unique);
     }

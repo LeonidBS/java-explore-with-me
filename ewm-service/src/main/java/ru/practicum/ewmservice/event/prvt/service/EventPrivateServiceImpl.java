@@ -201,7 +201,8 @@ public class EventPrivateServiceImpl implements EventPrivateService {
             }
         }
 
-        return createFullDto(eventRepository.save(event));
+        Event evenewEvent  = eventRepository.save(event);
+        return createFullDto(evenewEvent);
     }
 
     @Override

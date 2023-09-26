@@ -37,4 +37,10 @@ public class StatsController {
         return statsService.addStats(endpointHitDto);
     }
 
+    @GetMapping("/stats/url")
+    public Integer getHitByIpAndUri(@RequestParam String ip,
+                                   @RequestParam String uri) {
+
+        return statsService.findHitByIpAndUri(ip, uri);
+    }
 }

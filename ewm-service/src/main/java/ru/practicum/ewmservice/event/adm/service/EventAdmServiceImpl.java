@@ -63,6 +63,7 @@ public class EventAdmServiceImpl implements EventAdmService {
 
         if (users != null) {
             if (categories != null) {
+
                 if (rangeStart != null && rangeEnd != null) {
                     events = eventRepository.findByInitiatorStateCategoryEventDate(
                             users, states, categories, rangeStart, rangeEnd, page).toList();
@@ -70,7 +71,9 @@ public class EventAdmServiceImpl implements EventAdmService {
                     events = eventRepository.findByInitiatorStateCategory(
                             users, states, categories, page).toList();
                 }
+
             } else {
+
                 if (rangeStart != null && rangeEnd != null) {
                     events = eventRepository.findByInitiatorStateEventDate(
                             users, states, rangeStart, rangeEnd, page).toList();
@@ -79,9 +82,11 @@ public class EventAdmServiceImpl implements EventAdmService {
                             .findByInitiatorIdInAndStateInOrderByEventDateDescIdAsc(
                                     users, states, page).toList();
                 }
+
             }
         } else {
             if (categories != null) {
+
                 if (rangeStart != null && rangeEnd != null) {
                     events = eventRepository
                             .findByStateCategoryEventDate(
@@ -93,6 +98,7 @@ public class EventAdmServiceImpl implements EventAdmService {
                 }
 
             } else {
+
                 if (rangeStart != null && rangeEnd != null) {
                     events = eventRepository
                             .findByStateEventDate(
@@ -103,18 +109,19 @@ public class EventAdmServiceImpl implements EventAdmService {
                             .findByStateInOrderByEventDateDescIdAsc(
                                     states, page).toList();
                 }
+
             }
         }
 
         List<Integer> eventIds = events.stream()
                 .map(Event::getId)
                 .collect(Collectors.toList());
-        List<Integer> participationCounts = participationRepository.findParticipationCountByEventIdsStatus(eventIds,
-                ParticipationRequestStatus.CONFIRMED);
-        List<EventFullDto> dtos = eventMapper.mapListToDto(events);
+        List<Integer> participationCounts = participationRepository
+                .findParticipationCountByEventIdsStatus(eventIds,ParticipationRequestStatus.CONFIRMED);
         List<String> uris = events.stream()
                 .map(event -> "/events/" + event.getId())
                 .collect(Collectors.toList());
+        List<EventFullDto> dtos = eventMapper.mapListToDto(events);
         Map<Integer, Integer> statsMap = statsGet(uris);
 
         for (int i = 0; i < dtos.size(); i++) {
@@ -128,6 +135,7 @@ public class EventAdmServiceImpl implements EventAdmService {
 
             }
         }
+
         return dtos;
     }
 
