@@ -1,4 +1,4 @@
-package ru.practicum.statsclient.exception;
+package ru.practicum.ewmservice.exception;
 
 public class ApprovingException extends RuntimeException {
     public ApprovingException(String message) {
