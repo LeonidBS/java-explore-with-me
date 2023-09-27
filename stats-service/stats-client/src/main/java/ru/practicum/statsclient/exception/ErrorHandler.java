@@ -28,7 +28,7 @@ public class ErrorHandler {
                         )
                 )
                 .collect(Collectors.toList());
-        log.error(e.getMessage());
+        log.error(e.getMessage(), e);
         return new ValidationErrorResponse(violations);
     }
 
@@ -40,28 +40,28 @@ public class ErrorHandler {
         final List<Violation> violations = e.getBindingResult().getFieldErrors().stream()
                 .map(error -> new Violation(error.getField(), error.getDefaultMessage()))
                 .collect(Collectors.toList());
-        log.error(e.getMessage());
+        log.error(e.getMessage(), e);
         return new ValidationErrorResponse(violations);
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleMyValidationException(final MyValidationException e) {
-        log.error(e.getMessage());
+        log.error(e.getMessage(), e);
         return new ErrorResponse(e.getMessage());
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleStatusError(final StatusValidationException e) {
-        log.error(e.getMessage());
+        log.error(e.getMessage(), e);
         return new ErrorResponse(e.getMessage());
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleThrowable(final Throwable e) {
-        log.error(e.getMessage());
+        log.error(e.getMessage(), e);
         return new ErrorResponse("Произошла непредвиденная ошибка." + "\n"
                 + e.getMessage() + e);
     }

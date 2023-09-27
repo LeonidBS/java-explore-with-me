@@ -142,8 +142,6 @@ public class EventPublicServiceImpl implements EventPublicService {
 
     private String statsAdd(String ip, String uri) {
 
-        //  if (statsClient.findUrl(ip, uri) == 0) {
-
         EndpointHitDto endpointHitDto = EndpointHitDto.builder()
                 .app("ewm-service")
                 .uri(uri)
@@ -151,10 +149,6 @@ public class EventPublicServiceImpl implements EventPublicService {
                 .timestamp(LocalDateTime.now())
                 .build();
 
-        //         return statsClient.addStats(endpointHitDto).toString() + " saved";
-        //     } else {
-        //        return "URL is exist";
-        //    }
         return statsClient.addStats(endpointHitDto).toString();
     }
 

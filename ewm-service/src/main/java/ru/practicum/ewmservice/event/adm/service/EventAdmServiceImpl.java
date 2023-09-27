@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional
+@Transactional(readOnly = true)
 public class EventAdmServiceImpl implements EventAdmService {
     private final EventRepository eventRepository;
     private final EventMapper eventMapper;
@@ -140,6 +140,7 @@ public class EventAdmServiceImpl implements EventAdmService {
     }
 
     @Override
+    @Transactional
     public EventFullDto update(UpdateEventAdminRequest updateEventAdminRequest, Integer eventId) {
 
         Event event = eventRepository.findByIdFetch(eventId)
