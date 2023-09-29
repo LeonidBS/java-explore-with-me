@@ -39,10 +39,7 @@ public class CategoryAdmServiceImpl implements CategoryAdmService {
     public CategoryDto update(CategoryDto categoryDto, Integer catId) {
 
         Category existedCategory = categoryRepository.findById(catId)
-                .orElseThrow(() -> {
-                    log.error("Category with ID {} has not been found", catId);
-                    return new IdNotFoundException("There is no Category with ID: " + catId);
-                });
+                .orElseThrow(() ->  new IdNotFoundException("There is no Category with ID: " + catId));
 
         Category category = Category.builder()
                 .id(existedCategory.getId())

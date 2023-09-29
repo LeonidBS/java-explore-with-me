@@ -6,13 +6,14 @@ import ru.practicum.ewmservice.event.model.Event;
 import ru.practicum.ewmservice.user.dto.UserMapper;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 @Component
 @RequiredArgsConstructor
 public class EventMapper {
 
-    public EventFullDto mapToDto(Event entity) {
+    public static EventFullDto mapToDto(Event entity) {
 
         return new EventFullDto(
                 entity.getId(),
@@ -31,11 +32,13 @@ public class EventMapper {
                 entity.getRequestModeration(),
                 entity.getState(),
                 entity.getTitle(),
-                0
+                0,
+                new HashMap<>(),
+                null
         );
     }
 
-    public List<EventFullDto> mapListToDto(List<Event> events) {
+    public static List<EventFullDto> mapListToDto(List<Event> events) {
         List<EventFullDto> eventsFullDto = new ArrayList<>();
         for (Event event : events) {
             eventsFullDto.add(mapToDto(event));
@@ -43,7 +46,7 @@ public class EventMapper {
         return eventsFullDto;
     }
 
-    public EventShortDto mapToShortDto(Event entity) {
+    public static EventShortDto mapToShortDto(Event entity) {
 
         return new EventShortDto(
                 entity.getId(),
@@ -56,11 +59,21 @@ public class EventMapper {
                         UserMapper.mapToUserShortDto(entity.getInitiator()) : null,
                 entity.getPaid(),
                 entity.getTitle(),
-                0
+                0,
+                new HashMap<>(),
+                null
         );
     }
 
-    public List<EventShortDto> mapListToShortDto(List<Event> events) {
+    public static List<EventFullDto> mapListToFullDto(List<Event> events) {
+        List<EventFullDto> eventsFullDto = new ArrayList<>();
+        for (Event event : events) {
+            eventsFullDto.add(mapToDto(event));
+        }
+        return eventsFullDto;
+    }
+
+    public static List<EventShortDto> mapListToShortDto(List<Event> events) {
         List<EventShortDto> eventsShortDto = new ArrayList<>();
         for (Event event : events) {
             eventsShortDto.add(mapToShortDto(event));

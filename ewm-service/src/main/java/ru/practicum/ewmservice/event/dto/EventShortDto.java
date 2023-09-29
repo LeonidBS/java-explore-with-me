@@ -6,9 +6,11 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.practicum.ewmservice.category.dto.CategoryDto;
+import ru.practicum.ewmservice.rating.model.Emoji;
 import ru.practicum.ewmservice.user.dto.UserShortDto;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 @Data
 @AllArgsConstructor
@@ -36,4 +38,8 @@ public class EventShortDto {
     private String title;
 
     private int views;
+
+    private Map<Integer, Emoji> rates;
+
+    private Integer rating;
 }
