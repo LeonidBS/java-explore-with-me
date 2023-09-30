@@ -12,6 +12,7 @@ import ru.practicum.ewmservice.event.model.State;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Repository
@@ -178,4 +179,76 @@ public interface EventRepository extends JpaRepository<Event, Integer> {
                                          @Param("rangeStart") LocalDateTime rangeStart,
                                          @Param("rangeEnd") LocalDateTime rangeEnd,
                                          PageRequest page);
+
+    @Query("SELECT e.id " +
+            "FROM Event AS e " +
+            "LEFT JOIN e.initiator i " +
+            "WHERE i.id = ?1 " +
+            "AND e.state = 'PUBLISHED' " +
+            "AND e.eventDate < ?2 ")
+    List<Integer> findIdsByInitiatorStateConfirmedInPast(
+            Integer initiatorId,
+            LocalDateTime rangeStart);
+
+    @Query("SELECT e " +
+            "FROM Event AS e " +
+            "LEFT JOIN e.initiator i " +
+            "WHERE i.id = ?1 " +
+            "AND e.state = 'PUBLISHED' " +
+            "AND e.eventDate < ?2 ")
+    List<Event> findByInitiatorStateConfirmedInPast(
+            Integer initiatorId,
+            LocalDateTime rangeStart);
+
+    @Query("SELECT i.id " +
+            "FROM Event AS e " +
+            "LEFT JOIN e.initiator i " +
+            "WHERE e.id IN ?1 ")
+    List<Integer> findDistinctInitiatorIdByIdIn(List<Integer> dtoIds);
+
+    @Query("SELECT new map(e.id AS id, i.id AS initiatorId) " +
+            "FROM Event AS e " +
+            "LEFT JOIN e.initiator i " +
+            "WHERE i.id IN ?1 " +
+            "AND e.state = 'PUBLISHED' " +
+            "AND e.eventDate < ?2 ")
+    Map<Integer, Integer> findIdsByInitiatorInStateConfirmedInPast(
+            List<Integer> initiatorIds,
+            LocalDateTime rangeStart);
+
+    @Query("SELECT e.id " +
+            "FROM Event AS e " +
+            "LEFT JOIN e.initiator i " +
+            "WHERE i.id IN ?1 " +
+            "AND e.state = 'PUBLISHED' " +
+            "AND e.eventDate < ?2 ")
+    List<Integer> findIdsByInitiatorInStateConfirmedInPastList(
+            List<Integer> initiatorIds,
+            LocalDateTime rangeStart);
+
+    @Query("SELECT e " +
+            "FROM Event AS e " +
+            "LEFT JOIN e.initiator i " +
+            "WHERE i.id IN ?1 " +
+            "AND e.state = 'PUBLISHED' " +
+            "AND e.eventDate < ?2 ")
+    List<Event> findByInitiatorInStateConfirmedInPastList(
+            List<Integer> initiatorIds,
+            LocalDateTime rangeStart);
+
+    @Query("SELECT new map(e.id AS id, i.id AS initiatorId) " +
+            "FROM Event AS e " +
+            "LEFT JOIN e.initiator i " +
+            "WHERE i.id IN ?1 " +
+            "AND e.state = 'PUBLISHED' " +
+            "AND e.eventDate < ?2 ")
+    Map<Event, Integer> findByInitiatorInStateConfirmedInPast(
+            List<Integer> initiatorIds,
+            LocalDateTime rangeStart);
+
+    @Query("SELECT new map(e.id AS eventId, e.participantLimit AS pl)  " +
+            "FROM Event AS e " +
+            "WHERE e.id IN ?1 "
+    )
+    Map<Integer, Integer> findParticipantLimitsByIdIn (List<Integer> eventIds);
 }

@@ -24,6 +24,7 @@ public class EventPrivateController {
 
     @GetMapping("/{userId}/events")
     public List<EventShortDto> getByInitiatorId(@PositiveOrZero @PathVariable Integer userId,
+                                                @RequestParam(required = false) String sort,
                                                 @PositiveOrZero(message
                                                         = "page should be positive or 0")
                                                 @RequestParam(defaultValue = "0") Integer from,
@@ -31,7 +32,7 @@ public class EventPrivateController {
                                                         = "size should be positive number")
                                                 @RequestParam(defaultValue = "10") Integer size) {
 
-        return eventPrivateService.findByInitiatorId(userId, from, size);
+        return eventPrivateService.findByInitiatorId(userId, from, size, sort);
     }
 
     @PostMapping("/{userId}/events")

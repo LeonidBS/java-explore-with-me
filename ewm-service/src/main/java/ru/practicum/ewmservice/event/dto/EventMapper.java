@@ -34,7 +34,32 @@ public class EventMapper {
                 entity.getTitle(),
                 0,
                 new HashMap<>(),
-                null
+                0
+        );
+    }
+
+    public static EventFullPublicDto mapToPublicDto(Event entity) {
+
+        return new EventFullPublicDto(
+                entity.getId(),
+                entity.getAnnotation(),
+                null,
+                0,
+                entity.getCreatedOn(),
+                entity.getDescription(),
+                entity.getEventDate(),
+                entity.getInitiator() != null ?
+                        UserMapper.mapToUserShortForPublicDto(entity.getInitiator()) : null,
+                new LocationDto(entity.getLocation().getLat(), entity.getLocation().getLon()),
+                entity.getPaid(),
+                entity.getParticipantLimit(),
+                entity.getPublishedOn(),
+                entity.getRequestModeration(),
+                entity.getState(),
+                entity.getTitle(),
+                0,
+                new HashMap<>(),
+                0
         );
     }
 
@@ -65,6 +90,25 @@ public class EventMapper {
         );
     }
 
+    public static EventShortPublicDto mapToShortPublicDto(Event entity) {
+
+        return new EventShortPublicDto(
+                entity.getId(),
+                entity.getAnnotation(),
+                null,
+                null,
+                entity.getDescription(),
+                entity.getEventDate(),
+                entity.getInitiator() != null ?
+                        UserMapper.mapToUserShortForPublicDto(entity.getInitiator()) : null,
+                entity.getPaid(),
+                entity.getTitle(),
+                0,
+                new HashMap<>(),
+                0
+        );
+    }
+
     public static List<EventFullDto> mapListToFullDto(List<Event> events) {
         List<EventFullDto> eventsFullDto = new ArrayList<>();
         for (Event event : events) {
@@ -77,6 +121,14 @@ public class EventMapper {
         List<EventShortDto> eventsShortDto = new ArrayList<>();
         for (Event event : events) {
             eventsShortDto.add(mapToShortDto(event));
+        }
+        return eventsShortDto;
+    }
+
+    public static List<EventShortPublicDto> mapListToShortPublicDto(List<Event> events) {
+        List<EventShortPublicDto> eventsShortDto = new ArrayList<>();
+        for (Event event : events) {
+            eventsShortDto.add(mapToShortPublicDto(event));
         }
         return eventsShortDto;
     }

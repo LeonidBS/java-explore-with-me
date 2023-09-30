@@ -6,7 +6,7 @@ import ru.practicum.ewmservice.participation.dto.ParticipationDto;
 import java.util.List;
 
 public interface EventPrivateService {
-    List<EventShortDto> findByInitiatorId(Integer userId, Integer from, Integer size);
+    List<EventShortDto> findByInitiatorId(Integer userId, Integer from, Integer size, String sort);
 
     EventFullDto create(NewEventDto newEventDto, Integer userId);
 

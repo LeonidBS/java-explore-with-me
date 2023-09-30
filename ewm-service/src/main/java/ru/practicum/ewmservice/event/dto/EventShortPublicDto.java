@@ -6,9 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.practicum.ewmservice.category.dto.CategoryDto;
-import ru.practicum.ewmservice.event.model.State;
 import ru.practicum.ewmservice.rating.model.Emoji;
-import ru.practicum.ewmservice.user.dto.UserShortDto;
+import ru.practicum.ewmservice.user.dto.UserShortForPublicDto;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -17,38 +16,24 @@ import java.util.Map;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class EventFullDto {
+public class EventShortPublicDto {
 
     private Integer id;
 
-    private String annotation;
+    String annotation;
 
     private CategoryDto category;
 
-    private int confirmedRequests;
-
-    @JsonFormat(pattern = "yyyy-MM-dd' 'HH:mm:ss")
-    private LocalDateTime createdOn;
+    private Integer confirmedRequests;
 
     private String description;
 
     @JsonFormat(pattern = "yyyy-MM-dd' 'HH:mm:ss")
     private LocalDateTime eventDate;
 
-    private UserShortDto initiator;
-
-    private LocationDto location;
+    private UserShortForPublicDto initiator;
 
     private Boolean paid;
-
-    private Integer participantLimit;
-
-    @JsonFormat(pattern = "yyyy-MM-dd' 'HH:mm:ss")
-    private LocalDateTime publishedOn;
-
-    private Boolean requestModeration;
-
-    private State state;
 
     private String title;
 

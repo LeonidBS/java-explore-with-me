@@ -11,7 +11,8 @@ public class UserMapper {
             return new UserDto(
                     user.getId(),
                     user.getName(),
-                    user.getEmail()
+                    user.getEmail(),
+                    0
             );
         } else {
             return null;
@@ -29,6 +30,18 @@ public class UserMapper {
     public static UserShortDto mapToUserShortDto(User user) {
         if (user != null) {
             return new UserShortDto(
+                    user.getId(),
+                    user.getName(),
+                    0
+            );
+        } else {
+            return null;
+        }
+    }
+
+    public static UserShortForPublicDto mapToUserShortForPublicDto(User user) {
+        if (user != null) {
+            return new UserShortForPublicDto(
                     user.getId(),
                     user.getName()
             );

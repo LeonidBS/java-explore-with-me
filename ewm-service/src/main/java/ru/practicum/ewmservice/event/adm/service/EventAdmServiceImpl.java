@@ -14,11 +14,10 @@ import ru.practicum.ewmservice.event.model.StateAdminAction;
 import ru.practicum.ewmservice.event.repository.EventRepository;
 import ru.practicum.ewmservice.event.repository.LocationRepository;
 import ru.practicum.ewmservice.event.utility.GetEventDto;
+import ru.practicum.ewmservice.event.utility.UserRatingCalculation;
 import ru.practicum.ewmservice.exception.EventValidationException;
 import ru.practicum.ewmservice.exception.IdNotFoundException;
 import ru.practicum.ewmservice.exception.MyValidationException;
-import ru.practicum.ewmservice.participation.repository.ParticipationRepository;
-import ru.practicum.statsclient.client.StatsClient;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -33,8 +32,7 @@ public class EventAdmServiceImpl implements EventAdmService {
     private final CategoryRepository categoryRepository;
     private final LocationRepository locationRepository;
     private final GetEventDto getEventDto;
-//    private final ParticipationRepository participationRepository;
-//    private final StatsClient statsClient;
+    private final UserRatingCalculation userRatingCalculation;
 
     @Override
     public List<EventFullDto> findEventsByAdmin(List<Integer> users, List<State> states,
@@ -106,7 +104,7 @@ public class EventAdmServiceImpl implements EventAdmService {
             }
         }
 
-        return getEventDto.createFullDtoList(events);
+        return userRatingCalculation.addUserRatingInEventDtoList(getEventDto.createFullDtoList(events));
     }
 
     @Override
@@ -176,6 +174,6 @@ public class EventAdmServiceImpl implements EventAdmService {
             }
         }
 
-        return getEventDto.createFullDto(event);
+        return userRatingCalculation.addUserRatingInEventDto(getEventDto.createFullDto(event));
     }
 }

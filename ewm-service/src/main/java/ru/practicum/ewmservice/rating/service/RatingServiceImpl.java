@@ -35,7 +35,7 @@ public class RatingServiceImpl implements RatingService {
                     return new IdNotFoundException("There is no Event with ID: " + eventId);
                 });
 
-        if (raterId.equals(event.getInitiator().getId())) {
+        if (!raterId.equals(event.getInitiator().getId())) {
             User rater = userRepository.findById(raterId)
                     .orElseThrow(() -> {
                         log.error("User with ID {} has not been found", raterId);

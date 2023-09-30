@@ -7,6 +7,7 @@ import ru.practicum.ewmservice.participation.model.Participation;
 import ru.practicum.ewmservice.participation.model.ParticipationRequestStatus;
 
 import java.util.List;
+import java.util.Map;
 
 public interface ParticipationRepository extends JpaRepository<Participation, Integer> {
     List<Participation> findByRequesterId(Integer userId);
@@ -50,4 +51,12 @@ public interface ParticipationRepository extends JpaRepository<Participation, In
     void updateParticipationStatusById(ParticipationRequestStatus status, Integer participationId);
 
     List<Participation> findByIdIn(List<Integer> requestIds);
+
+    @Query("SELECT new Map(e.id AS eventId, COUNT(*) AS pc) " +
+            "FROM Participation AS p " +
+            "LEFT JOIN p.event e " +
+            "WHERE e.id IN ?1 " +
+            "AND p.status = 'CONFIRMED' " +
+            "GROUP BY e.id ")
+    Map<Integer, Integer> findMapParticipationCountByEventIdsStatus(List<Integer> eventIds);
 }

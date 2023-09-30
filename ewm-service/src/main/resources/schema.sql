@@ -100,7 +100,7 @@ CREATE TABLE IF NOT EXISTS participation
     status   VARCHAR(32)
 );
 
-CREATE TABLE rates
+CREATE TABLE IF NOT EXISTS rates
 (
     event_id INTEGER REFERENCES events (id) NOT NULL,
     user_id  INTEGER REFERENCES users (id)  NOT NULL,

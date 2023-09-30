@@ -6,8 +6,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewmservice.category.repository.CategoryRepository;
-import ru.practicum.ewmservice.event.dto.EventFullDto;
-import ru.practicum.ewmservice.event.dto.EventShortDto;
+import ru.practicum.ewmservice.event.dto.EventFullPublicDto;
+import ru.practicum.ewmservice.event.dto.EventShortPublicDto;
 import ru.practicum.ewmservice.event.model.Event;
 import ru.practicum.ewmservice.event.model.State;
 import ru.practicum.ewmservice.event.repository.EventRepository;
@@ -33,10 +33,10 @@ public class EventPublicServiceImpl implements EventPublicService {
     private final GetEventDto getEventDto;
 
     @Override
-    public List<EventShortDto> findByFilters(String text, List<Integer> categories, Boolean paid,
-                                             LocalDateTime rangeStart, LocalDateTime rangeEnd,
-                                             Boolean onlyAvailable, String sort, Integer from,
-                                             Integer size, String ip, String uri) {
+    public List<EventShortPublicDto> findByFilters(String text, List<Integer> categories, Boolean paid,
+                                                   LocalDateTime rangeStart, LocalDateTime rangeEnd,
+                                                   Boolean onlyAvailable, String sort, Integer from,
+                                                   Integer size, String ip, String uri) {
         PageRequest page = PageRequest.of(from / size, size);
 
         if (categories == null) {
@@ -59,12 +59,17 @@ public class EventPublicServiceImpl implements EventPublicService {
                         paidList, LocalDateTime.now(), page).toList();
 
                 if (sort.equals("VIEWS")) {
-                    return getEventDto.createShortDtoList(events).stream()
+                    return getEventDto.createShortPublicDtoList(events).stream()
                             .filter(dto -> dto.getConfirmedRequests() >= events.get(dto.getId()).getParticipantLimit())
-                            .sorted(Comparator.comparing(EventShortDto::getViews))
+                            .sorted(Comparator.comparing(EventShortPublicDto::getViews))
+                            .collect(Collectors.toList());
+                } else if (sort.equals("EVENT_RATING")) {
+                    return getEventDto.createShortPublicDtoList(events).stream()
+                            .filter(dto -> dto.getConfirmedRequests() >= events.get(dto.getId()).getParticipantLimit())
+                            .sorted(Comparator.comparing(EventShortPublicDto::getRating))
                             .collect(Collectors.toList());
                 } else {
-                    return getEventDto.createShortDtoList(events).stream()
+                    return getEventDto.createShortPublicDtoList(events).stream()
                             .filter(dto -> dto.getConfirmedRequests() >= events.get(dto.getId()).getParticipantLimit())
                             .collect(Collectors.toList());
                 }
@@ -74,11 +79,15 @@ public class EventPublicServiceImpl implements EventPublicService {
                         paidList, LocalDateTime.now(), page).toList();
 
                 if (sort.equals("VIEWS")) {
-                    return getEventDto.createShortDtoList(events).stream()
-                            .sorted(Comparator.comparing(EventShortDto::getViews))
+                    return getEventDto.createShortPublicDtoList(events).stream()
+                            .sorted(Comparator.comparing(EventShortPublicDto::getViews))
+                            .collect(Collectors.toList());
+                } else if (sort.equals("EVENT_RATING")) {
+                    return getEventDto.createShortPublicDtoList(events).stream()
+                            .sorted(Comparator.comparing(EventShortPublicDto::getRating))
                             .collect(Collectors.toList());
                 } else {
-                    return getEventDto.createShortDtoList(events);
+                    return getEventDto.createShortPublicDtoList(events);
                 }
 
             }
@@ -93,12 +102,17 @@ public class EventPublicServiceImpl implements EventPublicService {
                 events = eventRepository.findByFiltersInDateRange(text, categories,
                         paidList, rangeStart, rangeEnd, page).toList();
                 if (sort.equals("VIEWS")) {
-                    return getEventDto.createShortDtoList(events).stream()
+                    return getEventDto.createShortPublicDtoList(events).stream()
                             .filter(dto -> dto.getConfirmedRequests() >= events.get(dto.getId()).getParticipantLimit())
-                            .sorted(Comparator.comparing(EventShortDto::getViews))
+                            .sorted(Comparator.comparing(EventShortPublicDto::getViews))
+                            .collect(Collectors.toList());
+                } else if (sort.equals("EVENT_RATING")) {
+                    return getEventDto.createShortPublicDtoList(events).stream()
+                            .filter(dto -> dto.getConfirmedRequests() >= events.get(dto.getId()).getParticipantLimit())
+                            .sorted(Comparator.comparing(EventShortPublicDto::getRating))
                             .collect(Collectors.toList());
                 } else {
-                    return getEventDto.createShortDtoList(events).stream()
+                    return getEventDto.createShortPublicDtoList(events).stream()
                             .filter(dto -> dto.getConfirmedRequests() >= events.get(dto.getId()).getParticipantLimit())
                             .collect(Collectors.toList());
                 }
@@ -106,18 +120,22 @@ public class EventPublicServiceImpl implements EventPublicService {
                 events = eventRepository.findByFiltersInDateRange(text, categories,
                         paidList, rangeStart, rangeEnd, page).toList();
                 if (sort.equals("VIEWS")) {
-                    return getEventDto.createShortDtoList(events).stream()
-                            .sorted(Comparator.comparing(EventShortDto::getViews))
+                    return getEventDto.createShortPublicDtoList(events).stream()
+                            .sorted(Comparator.comparing(EventShortPublicDto::getViews))
+                            .collect(Collectors.toList());
+                } else if (sort.equals("EVENT_RATING")) {
+                    return getEventDto.createShortPublicDtoList(events).stream()
+                            .sorted(Comparator.comparing(EventShortPublicDto::getRating))
                             .collect(Collectors.toList());
                 } else {
-                    return getEventDto.createShortDtoList(events);
+                    return getEventDto.createShortPublicDtoList(events);
                 }
             }
         }
     }
 
     @Override
-    public EventFullDto findById(Integer id, String ip, String uri) {
+    public EventFullPublicDto findById(Integer id, String ip, String uri) {
 
         Event existedEvent = eventRepository.findById(id)
                 .orElseThrow(() -> new IdNotFoundException(String.format("Event with id=%d was not found", id)));
@@ -128,6 +146,6 @@ public class EventPublicServiceImpl implements EventPublicService {
 
         log.debug(Statistic.statsAdd(ip, uri, statsClient));
         log.debug("Request has been added to Stats,");
-        return getEventDto.createFullDto(existedEvent);
+        return getEventDto.createFullPublicDto(existedEvent);
     }
 }

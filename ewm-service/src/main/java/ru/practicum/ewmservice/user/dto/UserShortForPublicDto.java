@@ -7,10 +7,8 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 @Builder
-public class UserShortDto {
+public class UserShortForPublicDto {
     private Integer id;
 
     private String name;
-
-    private Integer rating;
 }

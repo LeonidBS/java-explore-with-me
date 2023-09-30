@@ -39,7 +39,7 @@ public class EventShortDto {
 
     private int views;
 
-    private Map<Integer, Emoji> rates;
+    private Map<Emoji, Integer> rates;
 
     private Integer rating;
 }
