@@ -63,7 +63,12 @@ public class EventPublicServiceImpl implements EventPublicService {
                             .filter(dto -> dto.getConfirmedRequests() >= events.get(dto.getId()).getParticipantLimit())
                             .sorted(Comparator.comparing(EventShortPublicDto::getViews))
                             .collect(Collectors.toList());
-                } else if (sort.equals("EVENT_RATING")) {
+                } else if (sort.equals("EVENT_DATE")) {
+                    return getEventDto.createShortPublicDtoList(events).stream()
+                            .filter(dto -> dto.getConfirmedRequests() >= events.get(dto.getId()).getParticipantLimit())
+                            .sorted(Comparator.comparing(EventShortPublicDto::getEventDate))
+                            .collect(Collectors.toList());
+                } else if (sort.equals("RATING")) {
                     return getEventDto.createShortPublicDtoList(events).stream()
                             .filter(dto -> dto.getConfirmedRequests() >= events.get(dto.getId()).getParticipantLimit())
                             .sorted(Comparator.comparing(EventShortPublicDto::getRating))
@@ -82,7 +87,11 @@ public class EventPublicServiceImpl implements EventPublicService {
                     return getEventDto.createShortPublicDtoList(events).stream()
                             .sorted(Comparator.comparing(EventShortPublicDto::getViews))
                             .collect(Collectors.toList());
-                } else if (sort.equals("EVENT_RATING")) {
+                } else if (sort.equals("EVENT_DATE")) {
+                    return getEventDto.createShortPublicDtoList(events).stream()
+                            .sorted(Comparator.comparing(EventShortPublicDto::getEventDate))
+                            .collect(Collectors.toList());
+                } else if (sort.equals("RATING")) {
                     return getEventDto.createShortPublicDtoList(events).stream()
                             .sorted(Comparator.comparing(EventShortPublicDto::getRating))
                             .collect(Collectors.toList());
@@ -106,7 +115,12 @@ public class EventPublicServiceImpl implements EventPublicService {
                             .filter(dto -> dto.getConfirmedRequests() >= events.get(dto.getId()).getParticipantLimit())
                             .sorted(Comparator.comparing(EventShortPublicDto::getViews))
                             .collect(Collectors.toList());
-                } else if (sort.equals("EVENT_RATING")) {
+                } else if (sort.equals("EVENT_DATE")) {
+                    return getEventDto.createShortPublicDtoList(events).stream()
+                            .filter(dto -> dto.getConfirmedRequests() >= events.get(dto.getId()).getParticipantLimit())
+                            .sorted(Comparator.comparing(EventShortPublicDto::getEventDate))
+                            .collect(Collectors.toList());
+                } else if (sort.equals("RATING")) {
                     return getEventDto.createShortPublicDtoList(events).stream()
                             .filter(dto -> dto.getConfirmedRequests() >= events.get(dto.getId()).getParticipantLimit())
                             .sorted(Comparator.comparing(EventShortPublicDto::getRating))
@@ -123,7 +137,11 @@ public class EventPublicServiceImpl implements EventPublicService {
                     return getEventDto.createShortPublicDtoList(events).stream()
                             .sorted(Comparator.comparing(EventShortPublicDto::getViews))
                             .collect(Collectors.toList());
-                } else if (sort.equals("EVENT_RATING")) {
+                } else if (sort.equals("EVENT_DATE")) {
+                    return getEventDto.createShortPublicDtoList(events).stream()
+                            .sorted(Comparator.comparing(EventShortPublicDto::getEventDate))
+                            .collect(Collectors.toList());
+                } else if (sort.equals("ERATING")) {
                     return getEventDto.createShortPublicDtoList(events).stream()
                             .sorted(Comparator.comparing(EventShortPublicDto::getRating))
                             .collect(Collectors.toList());

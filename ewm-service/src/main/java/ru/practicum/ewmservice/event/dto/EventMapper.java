@@ -6,7 +6,6 @@ import ru.practicum.ewmservice.event.model.Event;
 import ru.practicum.ewmservice.user.dto.UserMapper;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 @Component
@@ -33,7 +32,7 @@ public class EventMapper {
                 entity.getState(),
                 entity.getTitle(),
                 0,
-                new HashMap<>(),
+                null,
                 0
         );
     }
@@ -58,7 +57,7 @@ public class EventMapper {
                 entity.getState(),
                 entity.getTitle(),
                 0,
-                new HashMap<>(),
+                null,
                 0
         );
     }
@@ -85,7 +84,7 @@ public class EventMapper {
                 entity.getPaid(),
                 entity.getTitle(),
                 0,
-                new HashMap<>(),
+                null,
                 null
         );
     }
@@ -104,7 +103,7 @@ public class EventMapper {
                 entity.getPaid(),
                 entity.getTitle(),
                 0,
-                new HashMap<>(),
+                null,
                 0
         );
     }

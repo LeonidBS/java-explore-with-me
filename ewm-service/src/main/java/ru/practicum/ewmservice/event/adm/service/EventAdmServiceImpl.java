@@ -174,6 +174,20 @@ public class EventAdmServiceImpl implements EventAdmService {
             }
         }
 
-        return userRatingCalculation.addUserRatingInEventDto(getEventDto.createFullDto(event));
+        EventFullDto eventFullDto = getEventDto.createFullDto(event);
+        eventFullDto.getInitiator().setRating(userRatingCalculation.addUserRatingInEventDto(eventFullDto));
+        return eventFullDto;
+    }
+
+    @Transactional
+    @Override
+    public EventFullDto timepatch(Integer eventId, Integer hours) {
+        Event event = eventRepository.findByIdFetch(eventId)
+                .orElseThrow(() -> new IdNotFoundException("There is no Event with ID: " + eventId));
+        event.setEventDate(event.getEventDate().minusHours(hours));
+        event.setCreatedOn(event.getCreatedOn().minusHours(hours));
+
+
+        return getEventDto.createFullDto(eventRepository.save(event));
     }
 }

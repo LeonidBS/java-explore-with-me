@@ -14,23 +14,24 @@ import java.io.Serializable;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@EqualsAndHashCode
-@IdClass(RateId.class)
 public class Rate {
 
     @Id
+    @Column(name = "id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+
+  //  @Id
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
     @JoinColumn(name = "event_id")
-    @ToString.Exclude
     private Event event;
 
-    @Id
+ //   @Id
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
     @JoinColumn(name = "user_id")
-    @ToString.Exclude
     private User rater;
 
-    @Enumerated(EnumType.STRING)
+  //  @Enumerated(EnumType.STRING)
     @Column
-    private Emoji emoji;
+    private String emoji;
 }

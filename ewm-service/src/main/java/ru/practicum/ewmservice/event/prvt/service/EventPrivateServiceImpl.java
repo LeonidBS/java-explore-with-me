@@ -121,8 +121,11 @@ public class EventPrivateServiceImpl implements EventPrivateService {
     @Override
     public EventFullDto findByIdAndInitiatorId(Integer userId, Integer eventId) {
 
-        return userRatingCalculation.addUserRatingInEventDto(getEventDto
-                .createFullDto(checkEventInitiator(userId, eventId)));
+        EventFullDto eventFullDto = getEventDto
+                .createFullDto(checkEventInitiator(userId, eventId));
+       Integer rating = userRatingCalculation.addUserRatingInEventDto(eventFullDto);
+        eventFullDto.getInitiator().setRating(rating);
+        return eventFullDto;
     }
 
     @Override
@@ -185,7 +188,10 @@ public class EventPrivateServiceImpl implements EventPrivateService {
         }
 
         Event evenewEvent = eventRepository.save(event);
-        return userRatingCalculation.addUserRatingInEventDto(getEventDto.createFullDto(evenewEvent));
+        EventFullDto eventFullDto = getEventDto.createFullDto(evenewEvent);
+        int rating =  userRatingCalculation.addUserRatingInEventDto(eventFullDto);
+        eventFullDto.getInitiator().setRating(rating);
+        return eventFullDto;
     }
 
     @Override
@@ -218,7 +224,7 @@ public class EventPrivateServiceImpl implements EventPrivateService {
         List<ParticipationDto> rejectedRequests = new ArrayList<>();
 
         for (Participation participation : participationRepository
-                .findByIdIn(eventRequestStatusUpdateRequest.getRequestIds())) {
+                .findByIdInAndEventId(eventRequestStatusUpdateRequest.getRequestIds(), eventId)) {
             if (participation.getStatus().equals(ParticipationRequestStatus.PENDING)) {
                 if (eventRequestStatusUpdateRequest.getStatus()
                         .equals(ParticipationRequestStatus.CONFIRMED)) {
@@ -247,7 +253,7 @@ public class EventPrivateServiceImpl implements EventPrivateService {
 
     private Event checkEventInitiator(Integer userId, Integer eventId) {
 
-        Event event = eventRepository.findById(eventId)
+        Event event = eventRepository.findByIdFetch(eventId)
                 .orElseThrow(() -> new IdNotFoundException("There is no Event with ID: " + eventId));
 
         if (!event.getInitiator().getId().equals(userId)) {

@@ -6,8 +6,10 @@ import org.springframework.data.jpa.repository.Query;
 import ru.practicum.ewmservice.participation.model.Participation;
 import ru.practicum.ewmservice.participation.model.ParticipationRequestStatus;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public interface ParticipationRepository extends JpaRepository<Participation, Integer> {
     List<Participation> findByRequesterId(Integer userId);
@@ -52,11 +54,29 @@ public interface ParticipationRepository extends JpaRepository<Participation, In
 
     List<Participation> findByIdIn(List<Integer> requestIds);
 
-    @Query("SELECT new Map(e.id AS eventId, COUNT(*) AS pc) " +
+    @Query("SELECT e.id, COUNT(*) " +
             "FROM Participation AS p " +
             "LEFT JOIN p.event e " +
             "WHERE e.id IN ?1 " +
             "AND p.status = 'CONFIRMED' " +
             "GROUP BY e.id ")
-    Map<Integer, Integer> findMapParticipationCountByEventIdsStatus(List<Integer> eventIds);
+   List<Object[]> findMapParticipationCountByEventIdsStatus0(List<Integer> eventIds);
+
+    default Map<Integer, Long> findMapParticipationCountByEventIdsStatus(List<Integer> eventIds) {
+        return findMapParticipationCountByEventIdsStatus0(eventIds).stream()
+                .collect(
+                        Collectors.toMap(
+                                o -> (Integer) o[0],
+                                o -> (Long) o[1]
+                        )
+                );
+    }
+
+    @Query("SELECT p " +
+            "FROM Participation AS p " +
+            "LEFT JOIN p.event e " +
+            "LEFT JOIN p.requester r " +
+            "WHERE r.id IN ?1 " +
+            "AND e.id = ?2 ")
+    List<Participation> findByIdInAndEventId(List<Integer> requesterIds, Integer eventId);
 }

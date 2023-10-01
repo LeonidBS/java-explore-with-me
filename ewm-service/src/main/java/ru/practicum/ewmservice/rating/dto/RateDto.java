@@ -17,5 +17,5 @@ public class RateDto {
 
     private Integer userId;
 
-    private Emoji emoji;
+    private String emoji;
 }

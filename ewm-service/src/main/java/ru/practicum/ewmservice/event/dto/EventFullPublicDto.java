@@ -54,7 +54,7 @@ public class EventFullPublicDto {
 
     private int views;
 
-    private Map<Emoji, Integer> rates;
+    private Map<Emoji, Long> rates;
 
     private Integer rating;
 }

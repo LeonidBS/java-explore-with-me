@@ -8,44 +8,91 @@ import ru.practicum.ewmservice.rating.model.Rate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public interface RatingRepository extends JpaRepository<Rate, Long> {
 
     Optional<Rate> findByEventIdAndRaterId(Integer eventId, Integer raterId);
 
-    @Query("SELECT new map(r.emoji AS emoji, count(u.id) AS number)  " +
+    @Query(value = "SELECT r.emoji, count(r.emoji) " +
             "FROM Rate AS r " +
             "LEFT JOIN r.event e " +
             "LEFT JOIN r.rater u " +
             "WHERE e.id = ?1 " +
             "GROUP BY r.emoji"
     )
-    Map<Emoji, Integer> findMapByEventId(Integer eventId);
+    List<Object[]> findMapByEventId0(Integer eventId);
 
-    @Query("SELECT new map(r.emoji AS emoji, count(u.id) AS number)  " +
+    default Map<Emoji, Long> findMapByEventId(Integer eventId) {
+        return findMapByEventId0(eventId).stream()
+                .collect(
+                        Collectors.toMap(
+                                o -> Emoji.valueOf((String) o[0]),
+                                o -> (Long) o[1]
+                        )
+                );
+    }
+
+
+    @Query("SELECT e.id, r.emoji, count(r.emoji)  " +
             "FROM Rate AS r " +
             "LEFT JOIN r.event e " +
             "LEFT JOIN r.rater u " +
             "WHERE e.id IN ?1 " +
-            "GROUP BY r.emoji"
+            "GROUP BY e.id, r.emoji "
     )
-    List<Map<Emoji, Integer>> findMapByEventIds(List<Integer> eventIds);
+    List<Object[]> findMapByEventIds0(List<Integer> eventIds);
 
-    @Query("SELECT new map(e.id AS eventId, count(r.emoji) AS number)  " +
+    default Map<Integer, Map<Emoji, Long>> findMapByEventIds(List<Integer> eventIds) {
+        return findMapByEventIds0(eventIds).stream()
+                .collect(
+                        Collectors.groupingBy(
+                                o -> (Integer) o[0],
+                                Collectors.toMap(
+                                        o -> Emoji.valueOf((String) o[1]),
+                                        o -> (Long) o[2]
+                                )
+                        )
+                );
+    }
+
+    @Query("SELECT e.id, count(r.emoji) " +
             "FROM Rate AS r " +
             "LEFT JOIN r.event e " +
+            "LEFT JOIN r.rater u " +
             "WHERE e.id IN ?1 " +
             "AND r.emoji = 'LIKE' " +
-            "GROUP BY e.id"
+            "GROUP BY e.id, r.emoji "
     )
-    Map<Integer, Integer> findLikesByInitiatorIdIn(List<Integer> eventIds);
+    List<Object[]> findLikesByInitiatorIdIn0(List<Integer> eventIds);
 
-    @Query("SELECT new map(e.id AS eventId, count(r.emoji) AS number)  " +
+    default Map<Integer, Long> findLikesByInitiatorIdIn(List<Integer> eventIds) {
+        return findLikesByInitiatorIdIn0(eventIds).stream()
+                .collect(
+                        Collectors.toMap(
+                                o -> (Integer) o[0],
+                                o -> (Long) o[1]
+                        )
+                );
+    }
+
+    @Query("SELECT e.id, count(r.emoji) " +
             "FROM Rate AS r " +
             "LEFT JOIN r.event e " +
+            "LEFT JOIN r.rater u " +
             "WHERE e.id IN ?1 " +
             "AND r.emoji = 'DISLIKE' " +
-            "GROUP BY e.id"
+            "GROUP BY e.id, r.emoji "
     )
-    Map<Integer, Integer> findDislikesByInitiatorIdIn(List<Integer> initiatorIds);
+    List<Object[]> findDislikesByInitiatorIdIn0(List<Integer> eventIds);
+
+    default Map<Integer, Long> findDislikesByInitiatorIdIn(List<Integer> eventIds) {
+        return findDislikesByInitiatorIdIn0(eventIds).stream()
+                .collect(
+                        Collectors.toMap(
+                                o -> (Integer) o[0],
+                                o -> (Long) o[1]
+                        )
+                );
+    }
 }

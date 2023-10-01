@@ -1,12 +1,19 @@
 package ru.practicum.ewmservice.event.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import ru.practicum.ewmservice.category.model.Category;
 import ru.practicum.ewmservice.user.model.User;
 
 import javax.persistence.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Entity
 @Table(name = "Events")
@@ -71,4 +78,5 @@ public class Event {
 
     @Column
     private String title;
+
 }
