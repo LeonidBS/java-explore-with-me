@@ -5,7 +5,6 @@ import ru.practicum.ewmservice.event.model.Event;
 import ru.practicum.ewmservice.user.model.User;
 
 import javax.persistence.*;
-import java.io.Serializable;
 
 @Entity
 @Table(name = "rates")
@@ -21,17 +20,17 @@ public class Rate {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-  //  @Id
+    //  @Id
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
     @JoinColumn(name = "event_id")
     private Event event;
 
- //   @Id
+    //   @Id
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
     @JoinColumn(name = "user_id")
     private User rater;
 
-  //  @Enumerated(EnumType.STRING)
+    //  @Enumerated(EnumType.STRING)
     @Column
     private String emoji;
 }

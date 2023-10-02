@@ -6,10 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import ru.practicum.ewmservice.participation.model.Participation;
 import ru.practicum.ewmservice.participation.model.ParticipationRequestStatus;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 public interface ParticipationRepository extends JpaRepository<Participation, Integer> {
     List<Participation> findByRequesterId(Integer userId);
@@ -42,7 +39,7 @@ public interface ParticipationRepository extends JpaRepository<Participation, In
             "AND p.status = ?2 " +
             "GROUP BY e.id ")
     List<Integer> findParticipationCountByEventIdsStatus(List<Integer> eventId,
-                                                   ParticipationRequestStatus participationRequestStatus);
+                                                         ParticipationRequestStatus participationRequestStatus);
 
     List<Participation> findByEventId(Integer eventId);
 
@@ -52,31 +49,11 @@ public interface ParticipationRepository extends JpaRepository<Participation, In
             "WHERE p.id = ?2 ")
     void updateParticipationStatusById(ParticipationRequestStatus status, Integer participationId);
 
-    List<Participation> findByIdIn(List<Integer> requestIds);
-
-    @Query("SELECT e.id, COUNT(*) " +
-            "FROM Participation AS p " +
-            "LEFT JOIN p.event e " +
-            "WHERE e.id IN ?1 " +
-            "AND p.status = 'CONFIRMED' " +
-            "GROUP BY e.id ")
-   List<Object[]> findMapParticipationCountByEventIdsStatus0(List<Integer> eventIds);
-
-    default Map<Integer, Long> findMapParticipationCountByEventIdsStatus(List<Integer> eventIds) {
-        return findMapParticipationCountByEventIdsStatus0(eventIds).stream()
-                .collect(
-                        Collectors.toMap(
-                                o -> (Integer) o[0],
-                                o -> (Long) o[1]
-                        )
-                );
-    }
-
     @Query("SELECT p " +
             "FROM Participation AS p " +
             "LEFT JOIN p.event e " +
             "LEFT JOIN p.requester r " +
-            "WHERE r.id IN ?1 " +
+            "WHERE p.id IN ?1 " +
             "AND e.id = ?2 ")
-    List<Participation> findByIdInAndEventId(List<Integer> requesterIds, Integer eventId);
+    List<Participation> findByIdInAndEventId(List<Integer> requestIds, Integer eventId);
 }

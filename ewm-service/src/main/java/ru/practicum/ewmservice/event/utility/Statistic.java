@@ -1,7 +1,5 @@
 package ru.practicum.ewmservice.event.utility;
 
-import lombok.RequiredArgsConstructor;
-import ru.practicum.ewmservice.event.model.State;
 import ru.practicum.statsclient.client.StatsClient;
 import ru.practicum.statsdto.EndpointHitDto;
 
@@ -23,7 +21,7 @@ public class Statistic {
         return statsClient.addStats(endpointHitDto).toString();
     }
 
-    public static Map<Integer, Integer> statsGet(List<String> uris,  StatsClient statsClient) {
+    public static Map<Integer, Integer> statsGet(List<String> uris, StatsClient statsClient) {
 
         return statsClient.findStatsMap(LocalDateTime.parse("2000-01-05T00:00:00"),
                 LocalDateTime.parse("2050-01-05T00:00:00"), uris, true);

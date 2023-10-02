@@ -76,7 +76,7 @@ public class EventMapper {
                 entity.getId(),
                 entity.getAnnotation(),
                 null,
-                null,
+                0,
                 entity.getDescription(),
                 entity.getEventDate(),
                 entity.getInitiator() != null ?
@@ -85,7 +85,7 @@ public class EventMapper {
                 entity.getTitle(),
                 0,
                 null,
-                null
+                0
         );
     }
 

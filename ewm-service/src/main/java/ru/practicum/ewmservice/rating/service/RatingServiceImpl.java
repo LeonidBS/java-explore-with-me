@@ -12,7 +12,6 @@ import ru.practicum.ewmservice.exception.IdNotFoundException;
 import ru.practicum.ewmservice.participation.repository.ParticipationRepository;
 import ru.practicum.ewmservice.rating.dto.RateDto;
 import ru.practicum.ewmservice.rating.dto.RateMapper;
-import ru.practicum.ewmservice.rating.model.Emoji;
 import ru.practicum.ewmservice.rating.model.Rate;
 import ru.practicum.ewmservice.rating.repository.RatingRepository;
 import ru.practicum.ewmservice.user.model.User;
@@ -73,7 +72,7 @@ public class RatingServiceImpl implements RatingService {
 
         rate.setEmoji(emoji);
 
-            log.debug("Rate has been updated: {}", rate);
-            return rateMapper.mapToDto(ratingRepository.save(rate));
+        log.debug("Rate has been updated: {}", rate);
+        return rateMapper.mapToDto(ratingRepository.save(rate));
     }
 }

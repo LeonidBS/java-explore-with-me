@@ -44,12 +44,5 @@ public class EventAdmController {
         return eventAdmService.update(updateEventAdminRequest, eventId);
     }
 
-    @PatchMapping("/{eventId}/datetime/{hours}")
-    public EventFullDto update(@PathVariable Integer eventId,
-                               @PathVariable Integer hours) {
-
-        return eventAdmService.timepatch(eventId, hours);
-    }
-
 }
 

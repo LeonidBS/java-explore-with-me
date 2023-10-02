@@ -189,14 +189,6 @@ public interface EventRepository extends JpaRepository<Event, Integer> {
     List<Integer> findIdsByInitiatorStateConfirmedInPast(
             Integer initiatorId);
 
-    @Query("SELECT e " +
-            "FROM Event AS e " +
-            "LEFT JOIN e.initiator i " +
-            "WHERE i.id = ?1 " +
-            "AND e.state = 'PUBLISHED' ")
-    List<Event> findByInitiatorStateConfirmedInPast(
-            Integer initiatorId);
-
     @Query("SELECT i.id " +
             "FROM Event AS e " +
             "LEFT JOIN e.initiator i " +
@@ -228,34 +220,6 @@ public interface EventRepository extends JpaRepository<Event, Integer> {
             "AND e.state = 'PUBLISHED' ")
     List<Integer> findIdsByInitiatorInStateConfirmedInPastList(
             List<Integer> initiatorIds);
-
-    @Query("SELECT e " +
-            "FROM Event AS e " +
-            "LEFT JOIN e.initiator i " +
-            "WHERE i.id IN ?1 " +
-            "AND e.state = 'PUBLISHED' " +
-            "AND e.eventDate < ?2 ")
-    List<Event> findByInitiatorInStateConfirmedInPastList(
-            List<Integer> initiatorIds,
-            LocalDateTime rangeStart);
-
-    @Query("SELECT e.id AS id, i.id AS initiatorId " +
-            "FROM Event AS e " +
-            "LEFT JOIN e.initiator i " +
-            "WHERE i.id IN ?1 " +
-            "AND e.state = 'PUBLISHED' ")
-    List<Object[]> findByInitiatorInStateConfirmedInPast0(
-            List<Integer> initiatorIds);
-
-    default Map<Integer, Integer> findByInitiatorInStateConfirmedInPast(List<Integer> initiatorIds) {
-        return findByInitiatorInStateConfirmedInPast0(initiatorIds).stream()
-                .collect(
-                        Collectors.toMap(
-                                o -> (Integer) o[0],
-                                o -> (Integer) o[1]
-                        )
-                );
-    }
 
     @Query("SELECT e.id, e.participantLimit  " +
             "FROM Event AS e " +

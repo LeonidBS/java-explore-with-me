@@ -5,9 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.ewmservice.event.dto.EventFullDto;
 import ru.practicum.ewmservice.event.dto.EventFullPublicDto;
-import ru.practicum.ewmservice.event.dto.EventShortDto;
 import ru.practicum.ewmservice.event.dto.EventShortPublicDto;
 import ru.practicum.ewmservice.event.pblc.service.EventPublicService;
 
@@ -29,9 +27,9 @@ public class EventPublicController {
                                                   @RequestParam(required = false) List<Integer> categories,
                                                   @RequestParam(required = false) Boolean paid,
                                                   @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-                                            @RequestParam(required = false) LocalDateTime rangeStart,
+                                                  @RequestParam(required = false) LocalDateTime rangeStart,
                                                   @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-                                            @RequestParam(required = false) LocalDateTime rangeEnd,
+                                                  @RequestParam(required = false) LocalDateTime rangeEnd,
                                                   @RequestParam(defaultValue = "false") Boolean onlyAvailable,
                                                   @RequestParam(defaultValue = "EVENT_DATE") String sort,
                                                   @RequestParam(defaultValue = "0") @PositiveOrZero Integer from,
