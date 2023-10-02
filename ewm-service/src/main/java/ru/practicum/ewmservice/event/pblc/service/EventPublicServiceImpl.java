@@ -145,7 +145,7 @@ public class EventPublicServiceImpl implements EventPublicService {
                         return getEventDto.createShortPublicDtoList(events).stream()
                                 .sorted(Comparator.comparing(EventShortPublicDto::getEventDate))
                                 .collect(Collectors.toList());
-                    case "ERATING":
+                    case "RATING":
                         return getEventDto.createShortPublicDtoList(events).stream()
                                 .sorted(Comparator.comparing(EventShortPublicDto::getRating))
                                 .collect(Collectors.toList());

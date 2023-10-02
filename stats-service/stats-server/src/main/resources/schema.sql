@@ -1,5 +1,3 @@
-drop table IF EXISTS endpoint_hits;
-
 CREATE TABLE IF NOT EXISTS endpoint_hits
 (
     id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,

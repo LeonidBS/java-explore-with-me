@@ -26,7 +26,7 @@ public class GetEventDto {
         List<Integer> eventIds = events.stream()
                 .map(Event::getId)
                 .collect(Collectors.toList());
-        List<Integer> participationCounts = participationRepository.findParticipationCountByEventIdsStatus(eventIds,
+        Map<Integer, Long> participationCounts = participationRepository.findParticipationCountByEventIdsStatus(eventIds,
                 ParticipationRequestStatus.CONFIRMED);
         List<EventShortDto> dtos = EventMapper.mapListToShortDto(events);
         List<String> uris = events.stream()
@@ -38,7 +38,7 @@ public class GetEventDto {
         for (int i = 0; i < dtos.size(); i++) {
             dtos.get(i).setCategory(CategoryMapper.INSTANCE.mapToDto(events.get(i).getCategory()));
             if (!participationCounts.isEmpty()) {
-                confirmedRequests = participationCounts.get(i);
+                confirmedRequests = participationCounts.getOrDefault(dtos.get(i).getId(), 0L).intValue();
                 dtos.get(i).setConfirmedRequests(confirmedRequests);
 
                 if (!statsMap.isEmpty()) {
@@ -50,7 +50,7 @@ public class GetEventDto {
             if (!ratesList.isEmpty()) {
                 Map<Emoji, Long> rates = ratesList.get(dtos.get(i).getId());
                 dtos.get(i).setRates(rates);
-                dtos.get(i).setRating(ratingCalculation(rates, confirmedRequests, events.get(i).getParticipantLimit()));
+                dtos.get(i).setRating(ratingCalculation(rates, confirmedRequests));
             }
         }
 
@@ -62,7 +62,7 @@ public class GetEventDto {
         List<Integer> eventIds = events.stream()
                 .map(Event::getId)
                 .collect(Collectors.toList());
-        List<Integer> participationCounts = participationRepository.findParticipationCountByEventIdsStatus(eventIds,
+        Map<Integer, Long> participationCounts = participationRepository.findParticipationCountByEventIdsStatus(eventIds,
                 ParticipationRequestStatus.CONFIRMED);
         List<EventFullDto> dtos = EventMapper.mapListToFullDto(events);
         List<String> uris = events.stream()
@@ -70,12 +70,12 @@ public class GetEventDto {
                 .collect(Collectors.toList());
         Map<Integer, Map<Emoji, Long>> ratesList = ratingRepository.findMapByEventIds(eventIds);
         Map<Integer, Integer> statsMap = Statistic.statsGet(uris, statsClient);
-        Integer confirmedRequests = 0;
+        int confirmedRequests = 0;
 
         for (int i = 0; i < dtos.size(); i++) {
             dtos.get(i).setCategory(CategoryMapper.INSTANCE.mapToDto(events.get(i).getCategory()));
             if (!participationCounts.isEmpty()) {
-                confirmedRequests = participationCounts.get(i);
+                confirmedRequests = participationCounts.getOrDefault(dtos.get(i).getId(), 0L).intValue();
                 dtos.get(i).setConfirmedRequests(confirmedRequests);
 
                 if (!statsMap.isEmpty()) {
@@ -86,8 +86,7 @@ public class GetEventDto {
             if (!ratesList.isEmpty()) {
                 Map<Emoji, Long> rates = ratesList.get(dtos.get(i).getId());
                 dtos.get(i).setRates(rates);
-                dtos.get(i).setRating(ratingCalculation(rates, confirmedRequests,
-                        events.get(i).getParticipantLimit()));
+                dtos.get(i).setRating(ratingCalculation(rates, confirmedRequests));
 
             }
         }
@@ -114,7 +113,7 @@ public class GetEventDto {
 
         Map<Emoji, Long> rates = ratingRepository.findMapByEventId(event.getId());
         dto.setRates(rates);
-        dto.setRating(ratingCalculation(rates, participationCounts, event.getParticipantLimit()));
+        dto.setRating(ratingCalculation(rates, participationCounts));
         return dto;
     }
 
@@ -122,7 +121,7 @@ public class GetEventDto {
         List<Integer> eventIds = events.stream()
                 .map(Event::getId)
                 .collect(Collectors.toList());
-        List<Integer> participationCounts = participationRepository.findParticipationCountByEventIdsStatus(eventIds,
+        Map<Integer, Long> participationCounts = participationRepository.findParticipationCountByEventIdsStatus(eventIds,
                 ParticipationRequestStatus.CONFIRMED);
         List<EventShortPublicDto> dtos = EventMapper.mapListToShortPublicDto(events);
         List<String> uris = events.stream()
@@ -131,11 +130,12 @@ public class GetEventDto {
         Map<Integer, Map<Emoji, Long>> ratesList = ratingRepository.findMapByEventIds(eventIds);
         Map<Integer, Integer> statsMap = Statistic.statsGet(uris, statsClient);
         Integer confirmedRequests = 0;
+
         for (int i = 0; i < dtos.size(); i++) {
             dtos.get(i).setCategory(CategoryMapper.INSTANCE.mapToDto(events.get(i).getCategory()));
-            if (!participationCounts.isEmpty()) {
-                confirmedRequests = participationCounts.get(i);
-                dtos.get(i).setConfirmedRequests(confirmedRequests);
+            if (participationCounts != null) {
+                dtos.get(i).setConfirmedRequests(
+                        participationCounts.getOrDefault(dtos.get(i).getId(), 0L).intValue());
 
                 if (!statsMap.isEmpty()) {
                     dtos.get(i).setViews(statsMap.getOrDefault(dtos.get(i).getId(), 0));
@@ -145,9 +145,10 @@ public class GetEventDto {
 
             if (!ratesList.isEmpty()) {
                 Map<Emoji, Long> rates = ratesList.get(dtos.get(i).getId());
-                dtos.get(i).setRates(rates);
-                dtos.get(i).setRating(ratingCalculation(rates, confirmedRequests, events.get(i).getParticipantLimit()));
-
+                if (rates != null) {
+                    dtos.get(i).setRates(rates);
+                    dtos.get(i).setRating(ratingCalculation(rates, confirmedRequests));
+                }
             }
         }
 
@@ -175,16 +176,15 @@ public class GetEventDto {
         Map<Emoji, Long> rates = ratingRepository
                 .findMapByEventId(event.getId());
         dto.setRates(rates);
-        dto.setRating(ratingCalculation(rates, participationCounts, event.getParticipantLimit()));
+        dto.setRating(ratingCalculation(rates, participationCounts));
 
         return dto;
     }
 
     private Integer ratingCalculation(Map<Emoji, Long> rates,
-                                      Integer participationCounts,
-                                      Integer participantLimit) {
+                                      Integer participationCounts) {
 
-        if (rates.isEmpty() || participantLimit == 0) {
+        if (rates.isEmpty()) {
             return 0;
         } else {
             return (participationCounts - rates.getOrDefault(Emoji.DISLIKE, 0L).intValue())
