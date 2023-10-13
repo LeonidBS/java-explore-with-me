@@ -1,7 +1,8 @@
 package ru.practicum.ewmservice.event.utility;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewmservice.event.dto.EventFullDto;
 import ru.practicum.ewmservice.event.dto.EventShortDto;
 import ru.practicum.ewmservice.event.repository.EventRepository;
@@ -14,8 +15,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
-@Component
-public class UserRatingCalculation {
+@Service
+@Transactional(readOnly = true)
+public class UserRatingService {
     private final EventRepository eventRepository;
     private final RatingRepository ratingRepository;
 

@@ -36,21 +36,22 @@ public class GetEventDto {
         Map<Integer, Integer> statsMap = Statistic.statsGet(uris, statsClient);
         Integer confirmedRequests = 0;
         for (int i = 0; i < dtos.size(); i++) {
-            dtos.get(i).setCategory(CategoryMapper.INSTANCE.mapToDto(events.get(i).getCategory()));
+            EventShortDto dto = dtos.get(i);
+            dto.setCategory(CategoryMapper.INSTANCE.mapToDto(events.get(i).getCategory()));
             if (!participationCounts.isEmpty()) {
-                confirmedRequests = participationCounts.getOrDefault(dtos.get(i).getId(), 0L).intValue();
-                dtos.get(i).setConfirmedRequests(confirmedRequests);
+                confirmedRequests = participationCounts.getOrDefault(dto.getId(), 0L).intValue();
+                dto.setConfirmedRequests(confirmedRequests);
 
                 if (!statsMap.isEmpty()) {
-                    dtos.get(i).setViews(statsMap.get(dtos.get(i).getId()));
+                    dto.setViews(statsMap.get(dto.getId()));
                 }
 
             }
 
             if (!ratesList.isEmpty()) {
-                Map<Emoji, Long> rates = ratesList.get(dtos.get(i).getId());
-                dtos.get(i).setRates(rates);
-                dtos.get(i).setRating(ratingCalculation(rates, confirmedRequests));
+                Map<Emoji, Long> rates = ratesList.get(dto.getId());
+                dto.setRates(rates);
+                dto.setRating(ratingCalculation(rates, confirmedRequests));
             }
         }
 
@@ -73,22 +74,23 @@ public class GetEventDto {
         int confirmedRequests = 0;
 
         for (int i = 0; i < dtos.size(); i++) {
-            dtos.get(i).setCategory(CategoryMapper.INSTANCE.mapToDto(events.get(i).getCategory()));
+            EventFullDto dto = dtos.get(i);
+            dto.setCategory(CategoryMapper.INSTANCE.mapToDto(events.get(i).getCategory()));
             if (!participationCounts.isEmpty()) {
-                confirmedRequests = participationCounts.getOrDefault(dtos.get(i).getId(), 0L).intValue();
-                dtos.get(i).setConfirmedRequests(confirmedRequests);
+                confirmedRequests = participationCounts.getOrDefault(dto.getId(), 0L).intValue();
+                dto.setConfirmedRequests(confirmedRequests);
 
                 if (!statsMap.isEmpty()) {
-                    dtos.get(i).setViews(statsMap.get(dtos.get(i).getId()));
+                    dto.setViews(statsMap.get(dto.getId()));
                 }
             }
 
             if (!ratesList.isEmpty()) {
-                Map<Emoji, Long> rates = ratesList.get(dtos.get(i).getId());
-                dtos.get(i).setRates(rates);
-                dtos.get(i).setRating(ratingCalculation(rates, confirmedRequests));
-
+                Map<Emoji, Long> rates = ratesList.get(dto.getId());
+                dto.setRates(rates);
+                dto.setRating(ratingCalculation(rates, confirmedRequests));
             }
+
         }
 
         return dtos;
@@ -132,22 +134,23 @@ public class GetEventDto {
         Integer confirmedRequests = 0;
 
         for (int i = 0; i < dtos.size(); i++) {
-            dtos.get(i).setCategory(CategoryMapper.INSTANCE.mapToDto(events.get(i).getCategory()));
+            EventShortPublicDto dto = dtos.get(i);
+            dto.setCategory(CategoryMapper.INSTANCE.mapToDto(events.get(i).getCategory()));
             if (participationCounts != null) {
-                dtos.get(i).setConfirmedRequests(
-                        participationCounts.getOrDefault(dtos.get(i).getId(), 0L).intValue());
+                dto.setConfirmedRequests(
+                        participationCounts.getOrDefault(dto.getId(), 0L).intValue());
 
                 if (!statsMap.isEmpty()) {
-                    dtos.get(i).setViews(statsMap.getOrDefault(dtos.get(i).getId(), 0));
+                    dto.setViews(statsMap.getOrDefault(dto.getId(), 0));
                 }
 
             }
 
             if (!ratesList.isEmpty()) {
-                Map<Emoji, Long> rates = ratesList.get(dtos.get(i).getId());
+                Map<Emoji, Long> rates = ratesList.get(dto.getId());
                 if (rates != null) {
-                    dtos.get(i).setRates(rates);
-                    dtos.get(i).setRating(ratingCalculation(rates, confirmedRequests));
+                    dto.setRates(rates);
+                    dto.setRating(ratingCalculation(rates, confirmedRequests));
                 }
             }
         }
@@ -186,10 +189,9 @@ public class GetEventDto {
 
         if (rates.isEmpty()) {
             return 0;
-        } else {
-            return (participationCounts - rates.getOrDefault(Emoji.DISLIKE, 0L).intValue())
-                    * rates.getOrDefault(Emoji.LIKE, 0L).intValue();
         }
 
+        return (participationCounts - rates.getOrDefault(Emoji.DISLIKE, 0L).intValue())
+                * rates.getOrDefault(Emoji.LIKE, 0L).intValue();
     }
 }

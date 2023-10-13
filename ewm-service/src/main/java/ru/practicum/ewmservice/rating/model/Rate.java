@@ -20,17 +20,15 @@ public class Rate {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    //  @Id
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
     @JoinColumn(name = "event_id")
     private Event event;
 
-    //   @Id
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
     @JoinColumn(name = "user_id")
     private User rater;
 
-    //  @Enumerated(EnumType.STRING)
+    @Enumerated(EnumType.STRING)
     @Column
-    private String emoji;
+    private Emoji emoji;
 }

@@ -58,49 +58,13 @@ public class EventPublicServiceImpl implements EventPublicService {
                 events = eventRepository.findByFiltersFromNow(text, categories,
                         paidList, LocalDateTime.now(), page).toList();
 
-                switch (sort) {
-                    case "VIEWS":
-                        return getEventDto.createShortPublicDtoList(events).stream()
-                                .filter(dto -> dto.getConfirmedRequests() >= events.get(dto.getId()).getParticipantLimit())
-                                .sorted(Comparator.comparing(EventShortPublicDto::getViews))
-                                .collect(Collectors.toList());
-                    case "EVENT_DATE":
-                        return getEventDto.createShortPublicDtoList(events).stream()
-                                .filter(dto -> dto.getConfirmedRequests() >= events.get(dto.getId()).getParticipantLimit())
-                                .sorted(Comparator.comparing(EventShortPublicDto::getEventDate))
-                                .collect(Collectors.toList());
-                    case "RATING":
-                        return getEventDto.createShortPublicDtoList(events).stream()
-                                .filter(dto -> dto.getConfirmedRequests() >= events.get(dto.getId()).getParticipantLimit())
-                                .sorted(Comparator.comparing(EventShortPublicDto::getRating))
-                                .collect(Collectors.toList());
-                    default:
-                        return getEventDto.createShortPublicDtoList(events).stream()
-                                .filter(dto -> dto.getConfirmedRequests() >= events.get(dto.getId()).getParticipantLimit())
-                                .collect(Collectors.toList());
-                }
+          return sortIfAvailableOnly(sort, events);
 
             } else {
                 events = eventRepository.findByFiltersFromNow(text, categories,
                         paidList, LocalDateTime.now(), page).toList();
 
-                switch (sort) {
-                    case "VIEWS":
-                        return getEventDto.createShortPublicDtoList(events).stream()
-                                .sorted(Comparator.comparing(EventShortPublicDto::getViews))
-                                .collect(Collectors.toList());
-                    case "EVENT_DATE":
-                        return getEventDto.createShortPublicDtoList(events).stream()
-                                .sorted(Comparator.comparing(EventShortPublicDto::getEventDate))
-                                .collect(Collectors.toList());
-                    case "RATING":
-                        return getEventDto.createShortPublicDtoList(events).stream()
-                                .sorted(Comparator.comparing(EventShortPublicDto::getRating))
-                                .collect(Collectors.toList());
-                    default:
-                        return getEventDto.createShortPublicDtoList(events);
-                }
-
+                return sortIfAll(sort, events);
             }
 
         } else {
@@ -112,46 +76,12 @@ public class EventPublicServiceImpl implements EventPublicService {
             if (onlyAvailable) {
                 events = eventRepository.findByFiltersInDateRange(text, categories,
                         paidList, rangeStart, rangeEnd, page).toList();
-                switch (sort) {
-                    case "VIEWS":
-                        return getEventDto.createShortPublicDtoList(events).stream()
-                                .filter(dto -> dto.getConfirmedRequests() >= events.get(dto.getId()).getParticipantLimit())
-                                .sorted(Comparator.comparing(EventShortPublicDto::getViews))
-                                .collect(Collectors.toList());
-                    case "EVENT_DATE":
-                        return getEventDto.createShortPublicDtoList(events).stream()
-                                .filter(dto -> dto.getConfirmedRequests() >= events.get(dto.getId()).getParticipantLimit())
-                                .sorted(Comparator.comparing(EventShortPublicDto::getEventDate))
-                                .collect(Collectors.toList());
-                    case "RATING":
-                        return getEventDto.createShortPublicDtoList(events).stream()
-                                .filter(dto -> dto.getConfirmedRequests() >= events.get(dto.getId()).getParticipantLimit())
-                                .sorted(Comparator.comparing(EventShortPublicDto::getRating))
-                                .collect(Collectors.toList());
-                    default:
-                        return getEventDto.createShortPublicDtoList(events).stream()
-                                .filter(dto -> dto.getConfirmedRequests() >= events.get(dto.getId()).getParticipantLimit())
-                                .collect(Collectors.toList());
-                }
+
+                return sortIfAvailableOnly(sort, events);
             } else {
                 events = eventRepository.findByFiltersInDateRange(text, categories,
                         paidList, rangeStart, rangeEnd, page).toList();
-                switch (sort) {
-                    case "VIEWS":
-                        return getEventDto.createShortPublicDtoList(events).stream()
-                                .sorted(Comparator.comparing(EventShortPublicDto::getViews))
-                                .collect(Collectors.toList());
-                    case "EVENT_DATE":
-                        return getEventDto.createShortPublicDtoList(events).stream()
-                                .sorted(Comparator.comparing(EventShortPublicDto::getEventDate))
-                                .collect(Collectors.toList());
-                    case "RATING":
-                        return getEventDto.createShortPublicDtoList(events).stream()
-                                .sorted(Comparator.comparing(EventShortPublicDto::getRating))
-                                .collect(Collectors.toList());
-                    default:
-                        return getEventDto.createShortPublicDtoList(events);
-                }
+                return sortIfAll(sort, events);
             }
         }
     }
@@ -169,5 +99,48 @@ public class EventPublicServiceImpl implements EventPublicService {
         log.debug(Statistic.statsAdd(ip, uri, statsClient));
         log.debug("Request has been added to Stats,");
         return getEventDto.createFullPublicDto(existedEvent);
+    }
+
+    private List<EventShortPublicDto> sortIfAvailableOnly(String sort, List<Event> events) {
+        switch (sort) {
+            case "VIEWS":
+                return getEventDto.createShortPublicDtoList(events).stream()
+                        .filter(dto -> dto.getConfirmedRequests() >= events.get(dto.getId()).getParticipantLimit())
+                        .sorted(Comparator.comparing(EventShortPublicDto::getViews))
+                        .collect(Collectors.toList());
+            case "EVENT_DATE":
+                return getEventDto.createShortPublicDtoList(events).stream()
+                        .filter(dto -> dto.getConfirmedRequests() >= events.get(dto.getId()).getParticipantLimit())
+                        .sorted(Comparator.comparing(EventShortPublicDto::getEventDate))
+                        .collect(Collectors.toList());
+            case "RATING":
+                return getEventDto.createShortPublicDtoList(events).stream()
+                        .filter(dto -> dto.getConfirmedRequests() >= events.get(dto.getId()).getParticipantLimit())
+                        .sorted(Comparator.comparing(EventShortPublicDto::getRating))
+                        .collect(Collectors.toList());
+            default:
+                return getEventDto.createShortPublicDtoList(events).stream()
+                        .filter(dto -> dto.getConfirmedRequests() >= events.get(dto.getId()).getParticipantLimit())
+                        .collect(Collectors.toList());
+        }
+    }
+
+    private List<EventShortPublicDto> sortIfAll(String sort, List<Event> events) {
+        switch (sort) {
+            case "VIEWS":
+                return getEventDto.createShortPublicDtoList(events).stream()
+                        .sorted(Comparator.comparing(EventShortPublicDto::getViews))
+                        .collect(Collectors.toList());
+            case "EVENT_DATE":
+                return getEventDto.createShortPublicDtoList(events).stream()
+                        .sorted(Comparator.comparing(EventShortPublicDto::getEventDate))
+                        .collect(Collectors.toList());
+            case "RATING":
+                return getEventDto.createShortPublicDtoList(events).stream()
+                        .sorted(Comparator.comparing(EventShortPublicDto::getRating))
+                        .collect(Collectors.toList());
+            default:
+                return getEventDto.createShortPublicDtoList(events);
+        }
     }
 }

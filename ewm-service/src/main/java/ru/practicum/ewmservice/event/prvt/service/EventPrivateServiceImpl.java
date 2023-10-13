@@ -16,7 +16,7 @@ import ru.practicum.ewmservice.event.model.StateAction;
 import ru.practicum.ewmservice.event.repository.EventRepository;
 import ru.practicum.ewmservice.event.repository.LocationRepository;
 import ru.practicum.ewmservice.event.utility.GetEventDto;
-import ru.practicum.ewmservice.event.utility.UserRatingCalculation;
+import ru.practicum.ewmservice.event.utility.UserRatingService;
 import ru.practicum.ewmservice.exception.AccessDeniedException;
 import ru.practicum.ewmservice.exception.IdNotFoundException;
 import ru.practicum.ewmservice.exception.MyValidationException;
@@ -48,7 +48,7 @@ public class EventPrivateServiceImpl implements EventPrivateService {
     private final CategoryMapper categoryMapper;
     private final GetEventDto getEventDto;
     private final ParticipationRepository participationRepository;
-    private final UserRatingCalculation userRatingCalculation;
+    private final UserRatingService userRatingService;
 
     @Override
     public List<EventShortDto> findByInitiatorId(Integer userId, Integer from, Integer size, String sort) {
@@ -56,19 +56,19 @@ public class EventPrivateServiceImpl implements EventPrivateService {
         List<Event> events = eventRepository.findByInitiatorIdOrderByEventDateDescIdAsc(userId, page).toList();
 
         if (sort == null) {
-            return userRatingCalculation.getUserRatingListFroShortDto(getEventDto.createShortDtoList(events));
+            return userRatingService.getUserRatingListFroShortDto(getEventDto.createShortDtoList(events));
         } else if (sort.equals("EVENT_RATING")) {
-            return userRatingCalculation.getUserRatingListFroShortDto(
+            return userRatingService.getUserRatingListFroShortDto(
                             getEventDto.createShortDtoList(events)).stream()
                     .sorted(Comparator.comparing(EventShortDto::getRating))
                     .collect(Collectors.toList());
         } else if (sort.equals("USER_RATING")) {
-            return userRatingCalculation.getUserRatingListFroShortDto(
+            return userRatingService.getUserRatingListFroShortDto(
                             getEventDto.createShortDtoList(events)).stream()
                     .sorted(Comparator.comparing(dto -> dto.getInitiator().getRating()))
                     .collect(Collectors.toList());
         } else {
-            return userRatingCalculation.getUserRatingListFroShortDto(getEventDto.createShortDtoList(events));
+            return userRatingService.getUserRatingListFroShortDto(getEventDto.createShortDtoList(events));
         }
     }
 
@@ -123,7 +123,7 @@ public class EventPrivateServiceImpl implements EventPrivateService {
 
         EventFullDto eventFullDto = getEventDto
                 .createFullDto(checkEventInitiator(userId, eventId));
-       Integer rating = userRatingCalculation.addUserRatingInEventDto(eventFullDto);
+       Integer rating = userRatingService.addUserRatingInEventDto(eventFullDto);
         eventFullDto.getInitiator().setRating(rating);
         return eventFullDto;
     }
@@ -189,7 +189,7 @@ public class EventPrivateServiceImpl implements EventPrivateService {
 
         Event evenewEvent = eventRepository.save(event);
         EventFullDto eventFullDto = getEventDto.createFullDto(evenewEvent);
-        int rating =  userRatingCalculation.addUserRatingInEventDto(eventFullDto);
+        int rating =  userRatingService.addUserRatingInEventDto(eventFullDto);
         eventFullDto.getInitiator().setRating(rating);
         return eventFullDto;
     }

@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewmservice.rating.dto.RateDto;
+import ru.practicum.ewmservice.rating.model.Emoji;
 import ru.practicum.ewmservice.rating.service.RatingService;
 
 @Slf4j
@@ -21,7 +22,7 @@ public class RatingController {
     public RateDto create(
             @RequestHeader("X-Explore-Event-Id") Integer eventId,
             @PathVariable Integer raterId,
-            @PathVariable String emoji) {
+            @PathVariable Emoji emoji) {
 
         return ratingService.create(emoji, eventId, raterId);
     }
@@ -29,7 +30,7 @@ public class RatingController {
     @PatchMapping("/{rateId}/{emoji}")
     public RateDto update(@RequestHeader("X-Explore-Event-Id") Integer eventId,
                           @PathVariable Integer rateId,
-                          @PathVariable String emoji) {
+                          @PathVariable Emoji emoji) {
 
         return ratingService.update(emoji, eventId, rateId);
     }

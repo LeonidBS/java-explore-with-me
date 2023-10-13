@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import ru.practicum.ewmservice.rating.model.Emoji;
 
 @Data
 @AllArgsConstructor
@@ -14,5 +15,5 @@ public class RateDto {
 
     private Integer userId;
 
-    private String emoji;
+    private Emoji emoji;
 }

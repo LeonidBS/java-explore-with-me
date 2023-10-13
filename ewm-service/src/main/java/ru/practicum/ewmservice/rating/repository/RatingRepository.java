@@ -27,7 +27,7 @@ public interface RatingRepository extends JpaRepository<Rate, Long> {
         return findMapByEventId0(eventId).stream()
                 .collect(
                         Collectors.toMap(
-                                o -> Emoji.valueOf((String) o[0]),
+                                o -> (Emoji) o[0],
                                 o -> (Long) o[1]
                         )
                 );
@@ -49,7 +49,7 @@ public interface RatingRepository extends JpaRepository<Rate, Long> {
                         Collectors.groupingBy(
                                 o -> (Integer) o[0],
                                 Collectors.toMap(
-                                        o -> Emoji.valueOf((String) o[1]),
+                                        o -> (Emoji) o[1],
                                         o -> (Long) o[2]
                                 )
                         )

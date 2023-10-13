@@ -6,7 +6,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewmservice.event.repository.EventRepository;
-import ru.practicum.ewmservice.event.utility.UserRatingCalculation;
+import ru.practicum.ewmservice.event.utility.UserRatingService;
 import ru.practicum.ewmservice.exception.IdNotFoundException;
 import ru.practicum.ewmservice.user.dto.NewUserRequest;
 import ru.practicum.ewmservice.user.dto.UserDto;
@@ -23,7 +23,7 @@ import java.util.List;
 public class UserAdmServiceImpl implements UserAdmService {
     private final UserRepository userRepository;
     private final EventRepository eventRepository;
-    private final UserRatingCalculation userRatingCalculation;
+    private final UserRatingService userRatingService;
 
 
     @Override
@@ -31,10 +31,10 @@ public class UserAdmServiceImpl implements UserAdmService {
         PageRequest page = PageRequest.of(from / size, size);
 
         if (ids != null) {
-            return userRatingCalculation.addUserRatingList(
+            return userRatingService.addUserRatingList(
                     UserMapper.mapListToUserDto(userRepository.findByIdIn(ids, page).toList()));
         } else {
-            return userRatingCalculation.addUserRatingList(
+            return userRatingService.addUserRatingList(
                     UserMapper.mapListToUserDto(userRepository.findAll(page).toList()));
         }
     }

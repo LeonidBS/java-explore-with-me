@@ -37,7 +37,7 @@ mpa_id integer [not null] <br/>
 ### База данных основного сервиса ###
 
 Дианрамма
-![Architecture](/resources/stats.png)
+![Architecture](/resources/diagram.png)
 
 
 Основной сервис реализован в соответствии с Техническим заданием в полном объеме.

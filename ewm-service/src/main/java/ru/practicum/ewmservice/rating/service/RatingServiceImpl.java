@@ -12,6 +12,7 @@ import ru.practicum.ewmservice.exception.IdNotFoundException;
 import ru.practicum.ewmservice.participation.repository.ParticipationRepository;
 import ru.practicum.ewmservice.rating.dto.RateDto;
 import ru.practicum.ewmservice.rating.dto.RateMapper;
+import ru.practicum.ewmservice.rating.model.Emoji;
 import ru.practicum.ewmservice.rating.model.Rate;
 import ru.practicum.ewmservice.rating.repository.RatingRepository;
 import ru.practicum.ewmservice.user.model.User;
@@ -29,7 +30,7 @@ public class RatingServiceImpl implements RatingService {
     private final ParticipationRepository participationRepository;
 
     @Override
-    public RateDto create(String emoji, Integer eventId, Integer raterId) {
+    public RateDto create(Emoji emoji, Integer eventId, Integer raterId) {
 
         Event event = eventRepository.findByIdFetch(eventId)
                 .orElseThrow(() -> new IdNotFoundException("There is no Event with ID: " + eventId));
@@ -50,8 +51,7 @@ public class RatingServiceImpl implements RatingService {
                         .build();
 
                 log.debug("Rate has been created: {}", rate);
-                Rate rate1 = ratingRepository.save(rate);
-                return rateMapper.mapToDto(rate1);
+                return rateMapper.mapToDto(ratingRepository.save(rate));
             } else {
                 throw new AccessDeniedException(String.format("User with id=%d hase no" +
                         " confirmed participation status", raterId));
@@ -64,7 +64,7 @@ public class RatingServiceImpl implements RatingService {
     }
 
     @Override
-    public RateDto update(String emoji, Integer eventId, Integer raterId) {
+    public RateDto update(Emoji emoji, Integer eventId, Integer raterId) {
 
         Rate rate = ratingRepository.findByEventIdAndRaterId(eventId, raterId)
                 .orElseThrow(() -> new IdNotFoundException(String.format(

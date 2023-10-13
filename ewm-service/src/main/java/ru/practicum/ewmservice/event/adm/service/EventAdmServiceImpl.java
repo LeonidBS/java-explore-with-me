@@ -14,7 +14,7 @@ import ru.practicum.ewmservice.event.model.StateAdminAction;
 import ru.practicum.ewmservice.event.repository.EventRepository;
 import ru.practicum.ewmservice.event.repository.LocationRepository;
 import ru.practicum.ewmservice.event.utility.GetEventDto;
-import ru.practicum.ewmservice.event.utility.UserRatingCalculation;
+import ru.practicum.ewmservice.event.utility.UserRatingService;
 import ru.practicum.ewmservice.exception.EventValidationException;
 import ru.practicum.ewmservice.exception.IdNotFoundException;
 import ru.practicum.ewmservice.exception.MyValidationException;
@@ -32,7 +32,7 @@ public class EventAdmServiceImpl implements EventAdmService {
     private final CategoryRepository categoryRepository;
     private final LocationRepository locationRepository;
     private final GetEventDto getEventDto;
-    private final UserRatingCalculation userRatingCalculation;
+    private final UserRatingService userRatingService;
 
     @Override
     public List<EventFullDto> findEventsByAdmin(List<Integer> users, List<State> states,
@@ -104,7 +104,7 @@ public class EventAdmServiceImpl implements EventAdmService {
             }
         }
 
-        return userRatingCalculation.addUserRatingInEventDtoList(getEventDto.createFullDtoList(events));
+        return userRatingService.addUserRatingInEventDtoList(getEventDto.createFullDtoList(events));
     }
 
     @Override
@@ -175,7 +175,7 @@ public class EventAdmServiceImpl implements EventAdmService {
         }
 
         EventFullDto eventFullDto = getEventDto.createFullDto(event);
-        eventFullDto.getInitiator().setRating(userRatingCalculation.addUserRatingInEventDto(eventFullDto));
+        eventFullDto.getInitiator().setRating(userRatingService.addUserRatingInEventDto(eventFullDto));
         return eventFullDto;
     }
 
