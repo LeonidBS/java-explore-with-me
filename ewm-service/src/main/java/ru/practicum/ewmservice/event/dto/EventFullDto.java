@@ -1,20 +1,20 @@
 package ru.practicum.ewmservice.event.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import ru.practicum.ewmservice.category.dto.CategoryDto;
 import ru.practicum.ewmservice.event.model.State;
+import ru.practicum.ewmservice.rating.model.Emoji;
 import ru.practicum.ewmservice.user.dto.UserShortDto;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@Getter
 public class EventFullDto {
 
     private Integer id;
@@ -51,4 +51,8 @@ public class EventFullDto {
     private String title;
 
     private int views;
+
+    private Map<Emoji, Long> rates;
+
+    private Integer rating;
 }

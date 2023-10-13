@@ -13,4 +13,6 @@ public interface EventAdmService {
                                          LocalDateTime rangeStart, LocalDateTime rangeEnd, Integer from, Integer size);
 
     EventFullDto update(UpdateEventAdminRequest updateEventAdminRequest, Integer eventId);
+
+    EventFullDto timepatch(Integer eventId, Integer hours);
 }

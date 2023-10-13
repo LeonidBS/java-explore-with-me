@@ -17,6 +17,8 @@ public class UserDto {
 
     private String email;
 
+    private Integer rating;
+
     @Override
     public String toString() {
         return "{id=" + id

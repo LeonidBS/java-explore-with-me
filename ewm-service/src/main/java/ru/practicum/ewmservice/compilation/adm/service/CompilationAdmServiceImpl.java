@@ -44,10 +44,8 @@ public class CompilationAdmServiceImpl implements CompilationAdmService {
     public CompilationDto update(UpdateCompilationRequest updateCompilationRequest, Integer compId) {
 
         Compilation existedCompilation = compilationRepository.findById(compId)
-                .orElseThrow(() -> {
-                    log.error("Compilation with id={}} was not found", compId);
-                    return new IdNotFoundException(String.format("Compilation with id=%d was not found", compId));
-                });
+                .orElseThrow(() ->  new IdNotFoundException(
+                        String.format("Compilation with id=%d was not found", compId)));
 
         Compilation compilation = Compilation.builder()
                 .id(existedCompilation.getId())

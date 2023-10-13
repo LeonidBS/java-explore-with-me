@@ -12,7 +12,9 @@ import ru.practicum.ewmservice.event.model.State;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Repository
 public interface EventRepository extends JpaRepository<Event, Integer> {
@@ -178,4 +180,60 @@ public interface EventRepository extends JpaRepository<Event, Integer> {
                                          @Param("rangeStart") LocalDateTime rangeStart,
                                          @Param("rangeEnd") LocalDateTime rangeEnd,
                                          PageRequest page);
+
+    @Query("SELECT e.id " +
+            "FROM Event AS e " +
+            "LEFT JOIN e.initiator i " +
+            "WHERE i.id = ?1 " +
+            "AND e.state = 'PUBLISHED' ")
+    List<Integer> findIdsByInitiatorStateConfirmedInPast(
+            Integer initiatorId);
+
+    @Query("SELECT i.id " +
+            "FROM Event AS e " +
+            "LEFT JOIN e.initiator i " +
+            "WHERE e.id IN ?1 ")
+    List<Integer> findDistinctInitiatorIdByIdIn(List<Integer> dtoIds);
+
+    @Query("SELECT e.id, i.id " +
+            "FROM Event AS e " +
+            "LEFT JOIN e.initiator i " +
+            "WHERE i.id IN ?1 " +
+            "AND e.state = 'PUBLISHED' ")
+    List<Object[]> findIdsByInitiatorInStateConfirmedInPast0(
+            List<Integer> initiatorIds);
+
+    default Map<Integer, Integer> findIdsByInitiatorInStateConfirmedInPast(List<Integer> initiatorIds) {
+        return findIdsByInitiatorInStateConfirmedInPast0(initiatorIds).stream()
+                .collect(
+                        Collectors.toMap(
+                                o -> (Integer) o[0],
+                                o -> (Integer) o[1]
+                        )
+                );
+    }
+
+    @Query("SELECT e.id " +
+            "FROM Event AS e " +
+            "LEFT JOIN e.initiator i " +
+            "WHERE i.id IN ?1 " +
+            "AND e.state = 'PUBLISHED' ")
+    List<Integer> findIdsByInitiatorInStateConfirmedInPastList(
+            List<Integer> initiatorIds);
+
+    @Query("SELECT e.id, e.participantLimit  " +
+            "FROM Event AS e " +
+            "WHERE e.id IN ?1 "
+    )
+    List<Object[]> findParticipantLimitsByIdIn0(List<Integer> eventIds);
+
+    default Map<Integer, Integer> findParticipantLimitsByIdIn(List<Integer> eventIds) {
+        return findParticipantLimitsByIdIn0(eventIds).stream()
+                .collect(
+                        Collectors.toMap(
+                                o -> (Integer) o[0],
+                                o -> (Integer) o[1]
+                        )
+                );
+    }
 }

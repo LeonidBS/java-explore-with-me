@@ -15,6 +15,8 @@ import ru.practicum.ewmservice.event.model.State;
 import ru.practicum.ewmservice.event.model.StateAction;
 import ru.practicum.ewmservice.event.repository.EventRepository;
 import ru.practicum.ewmservice.event.repository.LocationRepository;
+import ru.practicum.ewmservice.event.utility.GetEventDto;
+import ru.practicum.ewmservice.event.utility.UserRatingService;
 import ru.practicum.ewmservice.exception.AccessDeniedException;
 import ru.practicum.ewmservice.exception.IdNotFoundException;
 import ru.practicum.ewmservice.exception.MyValidationException;
@@ -25,15 +27,12 @@ import ru.practicum.ewmservice.participation.model.ParticipationRequestStatus;
 import ru.practicum.ewmservice.participation.repository.ParticipationRepository;
 import ru.practicum.ewmservice.user.model.User;
 import ru.practicum.ewmservice.user.repository.UserRepository;
-import ru.practicum.statsclient.client.StatsClient;
-import ru.practicum.statsdto.ViewStatsDto;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -42,60 +41,46 @@ import java.util.stream.Collectors;
 @Transactional
 public class EventPrivateServiceImpl implements EventPrivateService {
     private final EventRepository eventRepository;
-    private final ParticipationRepository participationRepository;
-    private final EventMapper eventMapper;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final ParticipationMapper participationMapper;
     private final LocationRepository locationRepository;
     private final CategoryMapper categoryMapper;
-    private final StatsClient statsClient;
+    private final GetEventDto getEventDto;
+    private final ParticipationRepository participationRepository;
+    private final UserRatingService userRatingService;
 
     @Override
-    public List<EventShortDto> findByInitiatorId(Integer userId, Integer from, Integer size) {
+    public List<EventShortDto> findByInitiatorId(Integer userId, Integer from, Integer size, String sort) {
         PageRequest page = PageRequest.of(from / size, size);
         List<Event> events = eventRepository.findByInitiatorIdOrderByEventDateDescIdAsc(userId, page).toList();
 
-        List<Integer> eventIds = events.stream()
-                .map(Event::getId)
-                .collect(Collectors.toList());
-        List<Integer> participationCounts = participationRepository.findParticipationCountByEventIdsStatus(eventIds,
-                ParticipationRequestStatus.CONFIRMED);
-        List<EventShortDto> dtos = eventMapper.mapListToShortDto(events);
-        List<String> uris = events.stream()
-                .map(event -> "/events/" + event.getId())
-                .collect(Collectors.toList());
-        Map<Integer, Integer> statsMap = statsGet(uris);
-
-        for (int i = 0; i < dtos.size(); i++) {
-            dtos.get(i).setCategory(categoryMapper.mapToDto(events.get(i).getCategory()));
-            if (!participationCounts.isEmpty()) {
-                dtos.get(i).setConfirmedRequests(participationCounts.get(i));
-
-                if (!statsMap.isEmpty()) {
-                    dtos.get(i).setViews(statsMap.get(dtos.get(i).getId()));
-                }
-
-            }
+        if (sort == null) {
+            return userRatingService.getUserRatingListFroShortDto(getEventDto.createShortDtoList(events));
+        } else if (sort.equals("EVENT_RATING")) {
+            return userRatingService.getUserRatingListFroShortDto(
+                            getEventDto.createShortDtoList(events)).stream()
+                    .sorted(Comparator.comparing(EventShortDto::getRating))
+                    .collect(Collectors.toList());
+        } else if (sort.equals("USER_RATING")) {
+            return userRatingService.getUserRatingListFroShortDto(
+                            getEventDto.createShortDtoList(events)).stream()
+                    .sorted(Comparator.comparing(dto -> dto.getInitiator().getRating()))
+                    .collect(Collectors.toList());
+        } else {
+            return userRatingService.getUserRatingListFroShortDto(getEventDto.createShortDtoList(events));
         }
-
-        return dtos;
     }
 
     @Override
     public EventFullDto create(NewEventDto newEventDto, Integer userId) {
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> {
-                    log.error("User with ID {} has not been found", userId);
-                    return new IdNotFoundException("There is no User with ID: " + userId);
-                });
+                .orElseThrow(() -> new IdNotFoundException("There is no User with ID: " + userId));
 
         Category category = categoryRepository.findById(newEventDto.getCategory())
-                .orElseThrow(() -> {
-                    log.error("Category with ID {} has not been found", newEventDto.getCategory());
-                    return new IdNotFoundException("There is no Category with ID: " + newEventDto.getCategory());
-                });
+                .orElseThrow(() -> new IdNotFoundException("There is no Category with ID: "
+                        + newEventDto.getCategory()));
 
         Location location = null;
         if (newEventDto.getLocation() != null) {
@@ -127,7 +112,7 @@ public class EventPrivateServiceImpl implements EventPrivateService {
 
         log.debug("Event has been created: {}", event);
 
-        EventFullDto dto = eventMapper.mapToDto(eventRepository.save(event));
+        EventFullDto dto = EventMapper.mapToDto(eventRepository.save(event));
         dto.setViews(0);
         dto.setCategory(categoryMapper.mapToDto(event.getCategory()));
         return dto;
@@ -136,7 +121,11 @@ public class EventPrivateServiceImpl implements EventPrivateService {
     @Override
     public EventFullDto findByIdAndInitiatorId(Integer userId, Integer eventId) {
 
-        return createFullDto(checkEventInitiator(userId, eventId));
+        EventFullDto eventFullDto = getEventDto
+                .createFullDto(checkEventInitiator(userId, eventId));
+       Integer rating = userRatingService.addUserRatingInEventDto(eventFullDto);
+        eventFullDto.getInitiator().setRating(rating);
+        return eventFullDto;
     }
 
     @Override
@@ -144,10 +133,7 @@ public class EventPrivateServiceImpl implements EventPrivateService {
     public EventFullDto updateEvent(UpdateEventUserRequest updateEventUserRequest, Integer userId, Integer eventId) {
 
         Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> {
-                    log.error("Event with ID {} has not been found", eventId);
-                    return new IdNotFoundException("There is no Event with ID: " + eventId);
-                });
+                .orElseThrow(() -> new IdNotFoundException("There is no Event with ID: " + eventId));
 
         if (Duration.between(event.getEventDate(), LocalDateTime.now())
                 .compareTo(Duration.parse("PT2H")) >= 0) {
@@ -201,8 +187,11 @@ public class EventPrivateServiceImpl implements EventPrivateService {
             }
         }
 
-        Event evenewEvent  = eventRepository.save(event);
-        return createFullDto(evenewEvent);
+        Event evenewEvent = eventRepository.save(event);
+        EventFullDto eventFullDto = getEventDto.createFullDto(evenewEvent);
+        int rating =  userRatingService.addUserRatingInEventDto(eventFullDto);
+        eventFullDto.getInitiator().setRating(rating);
+        return eventFullDto;
     }
 
     @Override
@@ -235,7 +224,7 @@ public class EventPrivateServiceImpl implements EventPrivateService {
         List<ParticipationDto> rejectedRequests = new ArrayList<>();
 
         for (Participation participation : participationRepository
-                .findByIdIn(eventRequestStatusUpdateRequest.getRequestIds())) {
+                .findByIdInAndEventId(eventRequestStatusUpdateRequest.getRequestIds(), eventId)) {
             if (participation.getStatus().equals(ParticipationRequestStatus.PENDING)) {
                 if (eventRequestStatusUpdateRequest.getStatus()
                         .equals(ParticipationRequestStatus.CONFIRMED)) {
@@ -264,11 +253,8 @@ public class EventPrivateServiceImpl implements EventPrivateService {
 
     private Event checkEventInitiator(Integer userId, Integer eventId) {
 
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> {
-                    log.error("Event with ID {} has not been found", eventId);
-                    return new IdNotFoundException("There is no Event with ID: " + eventId);
-                });
+        Event event = eventRepository.findByIdFetch(eventId)
+                .orElseThrow(() -> new IdNotFoundException("There is no Event with ID: " + eventId));
 
         if (!event.getInitiator().getId().equals(userId)) {
             throw new MyValidationException(String.format("Initiator ID of Event with ID %d is not equal userId %d",
@@ -276,37 +262,5 @@ public class EventPrivateServiceImpl implements EventPrivateService {
         }
 
         return event;
-    }
-
-    private EventFullDto createFullDto(Event event) {
-        Integer participationCounts = participationRepository.findParticipationCountByEventIdAndStatus(event.getId(),
-                ParticipationRequestStatus.CONFIRMED);
-        EventFullDto dto = eventMapper.mapToDto(event);
-        dto.setCategory(categoryMapper.mapToDto(event.getCategory()));
-        Map<Integer, Integer> statsMap = statsGet(List.of("/events/" + event.getId()));
-
-        if (!statsMap.isEmpty()) {
-            dto.setViews(statsMap.get(event.getId()));
-        }
-
-        if (participationCounts != 0) {
-            dto.setConfirmedRequests(participationCounts);
-        }
-
-        return dto;
-    }
-
-    private Map<Integer, Integer> statsGet(List<String> uris) {
-        List<ViewStatsDto> response = statsClient.findStats(LocalDateTime.parse("2000-01-05T00:00:00"),
-                LocalDateTime.parse("2050-01-05T00:00:00"), uris, true);
-        Map<Integer, Integer> statsMap = new HashMap<>();
-
-        if (!response.isEmpty()) {
-            for (ViewStatsDto viewStatsDto : response) {
-                statsMap.put(Integer.parseInt(viewStatsDto.getUri().substring(8)), viewStatsDto.getHits());
-            }
-        }
-
-        return statsMap;
     }
 }

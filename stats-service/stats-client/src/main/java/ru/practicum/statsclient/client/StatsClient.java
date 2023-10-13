@@ -55,8 +55,12 @@ public class StatsClient {
                 Map<Integer, Integer> statsMap = new HashMap<>();
 
                 for (ViewStatsDto viewStatsDto : (ViewStatsDto[]) Objects.requireNonNull(response.getBody())) {
-                    statsMap.put(Integer.parseInt(viewStatsDto.getUri().substring(8)),
-                            viewStatsDto.getHits());
+                        if (viewStatsDto.getUri().length() >= 8) {
+                            statsMap.put(Integer.parseInt(viewStatsDto.getUri().substring(8)),
+                                    viewStatsDto.getHits());
+                        } else {
+                            statsMap.put(0,0);
+                        }
                 }
 
                 return statsMap;
@@ -118,9 +122,9 @@ public class StatsClient {
             ResponseEntity<Object> response = get(url
                             + "/stats?start={start}&end={end}&uris={uris}&unique={unique}",
                     parameters);
-           if (response.getStatusCodeValue() == 200) {
+            if (response.getStatusCodeValue() == 200) {
                 return Arrays.asList((ViewStatsDto[]) Objects.requireNonNull(response.getBody()));
-           } else if (response.getStatusCode().is4xxClientError()) {
+            } else if (response.getStatusCode().is4xxClientError()) {
                 throw new ResponseEntityErrorException("Bad request");
             } else {
                 throw new ResponseEntityErrorException("Request is not correct");

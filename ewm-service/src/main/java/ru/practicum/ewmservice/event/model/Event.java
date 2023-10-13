@@ -71,4 +71,5 @@ public class Event {
 
     @Column
     private String title;
+
 }

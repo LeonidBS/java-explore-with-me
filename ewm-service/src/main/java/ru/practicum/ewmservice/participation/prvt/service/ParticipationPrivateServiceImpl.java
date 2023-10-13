@@ -43,16 +43,10 @@ public class ParticipationPrivateServiceImpl implements ParticipationPrivateServ
     public ParticipationDto saveParticipation(Integer userId, Integer eventId) {
 
         Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> {
-                    log.error("Event with ID {} has not been found", eventId);
-                    return new IdNotFoundException("There is no Event with ID: " + eventId);
-                });
+                .orElseThrow(() -> new IdNotFoundException("There is no Event with ID: " + eventId));
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> {
-                    log.error("User with ID {} has not been found", userId);
-                    return new IdNotFoundException("There is no User with ID: " + userId);
-                });
+                .orElseThrow(() -> new IdNotFoundException("There is no User with ID: " + userId));
 
         if (event.getInitiator().equals(user)) {
             throw new ParticipationRequestException("Event Initiator is equal Participation requester");
@@ -96,10 +90,7 @@ public class ParticipationPrivateServiceImpl implements ParticipationPrivateServ
     public ParticipationDto update(Integer userId, Integer requestId) {
 
         Participation existParticipation = participationRepository.findById(requestId)
-                .orElseThrow(() -> {
-                    log.error("Event with ID {} has not been found", requestId);
-                    return new IdNotFoundException("There is no Event with ID: " + requestId);
-                });
+                .orElseThrow(() -> new IdNotFoundException("There is no Event with ID: " + requestId));
 
        if (!userRepository.existsById(userId)) {
                     throw new IdNotFoundException("There is no Event with ID: " + userId);
