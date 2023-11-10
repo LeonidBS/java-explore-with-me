@@ -106,8 +106,6 @@ mpa_id integer [not null] <br/>
 Для развертывания проекта используется Docker-compose, в терминале нужно открыть директорию проекта и ввести команду ```docker-compose up```.  
 Используемая версия языка Java - 11.
 
-https://github.com/LeonidBS/java-explore-with-me/pull/5
-
 ## Развитие ##
 Планируется произвести рефакторинг
 
